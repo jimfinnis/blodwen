@@ -1,0 +1,13 @@
+#!/bin/bash
+for f in *.svg
+do
+    out=`basename $f .svg`.pdf
+    
+    if test $out -ot $f
+    then
+        echo $f "->" $out
+        inkscape -D --export-pdf=$out $f
+    else
+        echo "skipping " $f "->" $out
+    fi
+done
