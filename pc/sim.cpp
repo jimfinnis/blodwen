@@ -99,6 +99,7 @@ int RoverSimulator::write(const char *s,int ct){
     // process the simulator
     //    update();
     poll();
+    return 0; // 0=OK
 }
 
 
@@ -162,7 +163,6 @@ inline float getr(int d,int n){
 
 
 static double odo[10];//fake odometry readings; 10 of them even though it wastes space, it simplifies the code.
-static double temp[10]; //fake temp readings
 
 RoverSimulator::RoverSimulator(){
     timeSoFar = 0;

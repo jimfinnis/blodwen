@@ -250,9 +250,12 @@ class Rover {
 public:
     /// are leg collision/interference checks enabled?
     bool legCollisionChecksEnabled; 
-
+    
+    /// set leg collision check enabled state, return previous value
     bool setLegCollisionChecks(bool f){
+        bool ret=legCollisionChecksEnabled;
 	legCollisionChecksEnabled=f;
+        return ret;
     }
     
     /// return the singleton instance, creating if required.
@@ -365,7 +368,7 @@ public:
     /// @param t type 0,1,2 (drive,steer,lift)
     Motor *getMotor(int w,int t){
         w--;
-        pair[getPairIdx(w)].getMotor(getWheelIdx(w),t);
+        return pair[getPairIdx(w)].getMotor(getWheelIdx(w),t);
     }
     
     /// get a pointer to a motor's data block by wheel and type
@@ -373,7 +376,7 @@ public:
     /// @param t type 0,1,2 (drive,steer,lift)
     MotorData *getMotorData(int w,int t){
         w--;
-        pair[getPairIdx(w)].getMotorData(getWheelIdx(w),t);
+        return pair[getPairIdx(w)].getMotorData(getWheelIdx(w),t);
     }
     
         
@@ -383,7 +386,7 @@ public:
     
     DriveMotorData *getDriveData(int n){
         n--;
-        pair[getPairIdx(n)].getDriveData(getWheelIdx(n));
+        return pair[getPairIdx(n)].getDriveData(getWheelIdx(n));
     }
     
     /// get a pointer to the monitoring data for a given steer motor
@@ -391,7 +394,7 @@ public:
     
     SteerMotorData *getSteerData(int n){
         n--;
-        pair[getPairIdx(n)].getSteerData(getWheelIdx(n));
+        return pair[getPairIdx(n)].getSteerData(getWheelIdx(n));
     }
     
     /// get a pointer to the monitoring data for a given lift motor
@@ -399,9 +402,8 @@ public:
     
     LiftMotorData *getLiftData(int n){
         n--;
-        pair[getPairIdx(n)].getLiftData(getWheelIdx(n));
+        return pair[getPairIdx(n)].getLiftData(getWheelIdx(n));
     }
-    
     /// get a pointer to a given drive motor
     /// @param n wheel number 1-6
     

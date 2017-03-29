@@ -123,8 +123,6 @@ public:
     /// read a block of known length - will keep reading until the
     /// correct number of bytes has been read.
     void readBlock(uint8_t *ptr,int size){
-        uint8_t *base = ptr;
-        int qqq=size;
         while(size){
             int rv = comms->read((char *)ptr,size);            
             if(rv<0){
@@ -334,7 +332,6 @@ public:
         
         // copy values into register holding area
         
-        int ct=0;
         uint8_t *ptr = buf;
         
         for(int i=0;i<readSetCt[set];i++){

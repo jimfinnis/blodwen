@@ -39,6 +39,8 @@ public:
         current=0;
     }
     
+    virtual ~MotorSim(){}
+    
     void update(){
         actual = required*smoothing + actual*(1.0f-smoothing);
         float c = fabs(required*RoverSimulator::getSimCurrentFactor());
