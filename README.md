@@ -11,7 +11,7 @@ I do this with an bash/Inkscape script, which is provided:
 ```svgs2pdfs```.
 
 The code consists of:
-* the Blodwen PC library which communicates with the rover chassis
+* **pc**: the Blodwen PC library which communicates with the rover chassis
 hardware (i.e. the master Arduino): a script is provided to convert this into a tar archive for incorporation into other projects;
 * **firmware**: the firmware for the master Arduino and the slave motor controllers. This is intended to be compiled with ```ino``` but can be readily modified;
 * **roverScript**: the Angort scripting environment which nobody but Jim uses.
