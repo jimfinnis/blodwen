@@ -1,0 +1,169 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  System        : 
+%  Module        : 
+%  Object Name   : $RCSfile$
+%  Revision      : $Revision$
+%  Date          : $Date$
+%  Author        : $Author$
+%  Created By    : Jim Finnis
+%  Created       : Mon Dec 10 22:01:02 2012
+%  Last Modified : <130605.1035>
+%
+%  Description 
+%
+%  Notes
+%
+%  History
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Copyright (c) 2012 Jim Finnis.
+% 
+% All Rights Reserved.
+% 
+% This  document  may  not, in  whole  or in  part, be  copied,  photocopied,
+% reproduced,  translated,  or  reduced to any  electronic  medium or machine
+% readable form without prior written consent from Jim Finnis.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Onboard PC library}
+The onboard PC currently uses a library of C++ classes to abstract
+the communications protocol, the details of \isqc{}, and
+the vagaries of the firmware register set (for the reasons given
+in section~\ref{firmrec}, working out which slave controller to send
+commands to in order to turn a particular wheel is not straightforward.)
+
+This section contains a brief overview of the C++ classes, describing their
+functions but not going into any details of methods.
+
+
+\subsection{Rover}
+The \emph{Rover} class is the top-level class. The utilising code is expected
+to instantiate a single object of this class. Calling the initialisation method
+\emph{init} 
+with a character device name and a baud rate will start a connection to the master
+controller (the Arduino) which will be reset. Once the connection is made,
+calling \emph{update} periodically will request state information about all the 
+devices.
+
+Other methods allow the user access to motor objects, which will allow the user
+to change motor parameters and required speeds/positions; and to motor data
+blocks, allowing users to monitor the motors. The data blocks will contain
+information received at the last \emph{update.} 
+
+Note that the communications over \isqc{} have been kept to a minimum --- the
+rover uses the ``set read set'' firmware protocol command (see
+section~\ref{protoc}) to send a set of registers. When a simple 3 byte ``read
+set'' command is set with a set number, the slave will send a packet of all
+the registers in that set.
+
+Internally, the rover uses the \emph{WheelPair} class to manage triplets
+of slave controller boards, which in turn use \emph{MotorDriverData} objects
+to manage reading data from the two types of slave (the \emph{Motor} class
+handles writing values.) 
+
+Communications are handled by \emph{SlaveProtocol}, which in turn uses
+\emph{SerialComms.} 
+
+\subsection{Motor}
+This class contains methods to send parameters (such as PID gains) to a motor,
+set its required position or speed, and reset any exception condition\footnote{for example, if
+a motor's current exceeds its overcurrent threshold, the slave will detect this
+and shut the motor down.}. There are three subclasses of \emph{Motor}, one
+for each motor type: \emph{DriveMotor}, \emph{SteerMotor} and \emph{LiftMotor.} They present similar interfaces to the user.
+Pointers to motor objects can be obtained by calling methods in \emph{Rover}.
+
+\subsection{MotorData}
+This is a class containing general motor monitoring data, such as:
+\begin{itemize}
+\item error, error integral, error derivative
+\item control value being sent to the motor
+\item interval between control ticks
+\item current
+\item actual position or speed
+\item exception state
+\end{itemize}
+There are three subclasses, one for each motor type: the lift and steer
+subclasses are identical and the drive subclass also contains odometry data.
+
+Pointers to motor data objects can be obtained by calling methods in \emph{Rover}.
+Note that the data in these objects is \textbf{only updated when \emph{update} is called.} 
+
+
+\subsection{StatusListener}
+The communications system can inform third parties who register with it of changes
+to the comms status --- for example, disconnection or protocol error. This is done
+by creating a \emph{StatusListener} subclass and registering it with the \emph{SerialComms} 
+object, available through \emph{Rover.} 
+
+\subsection{Calibration settings}
+Default calibration settings for the motors can (and should) be sent
+to the controllers by calling
+\texttt{Rover::calibrate()} in the file \texttt{rover.cpp}.
+
+
+
+\subsection{Example code}
+\begin{v}
+int main(int argc,char *argv[]){
+    Rover r;
+    
+    try {
+        // set up the rover given the comms port and the
+        // baud rate.
+        r.init("/dev/ttyACM0",115200);
+        
+        // send default calibration
+        r.calibrate();
+        
+        // some parameter data we're going to change;
+        // you probably won't do this - it's just an illustration.
+
+        MotorParams params = {
+            0.004,0,0,   //PID
+            0,0,         //integral cap and decay
+            300,         //overcurrent threshold
+        };
+        
+        // change parameters on the drive motors
+        // and set a speed for them
+        
+        for(int i=1;i<=6;i++) { // motors are 1 to 6 as in the documentation
+            Motor *m = r.getDrive(i); // get each drive motor
+
+            // get a pointer to its parameters
+            MotorParams *p = m->getParams();
+
+            // copy some other data into them
+            *p = params;
+
+            // and send the changes
+            m->sendParams();
+
+            // and set a speed
+            m->setRequired(1000);
+        }
+        
+        for(;;){
+            usleep(10000); // wait 1/100 s
+            r.update(); // update the rover
+
+            // get drive motor 1 data
+            DriveMotorData *d = r.getDriveData(1);
+            printf("%f\n",d->actual); // print actual speed
+        }   
+        
+    } catch(SlaveException e) {
+
+        // slave exceptions are thrown by protocol and comms errors
+        printf("Error in rover communication: %s\n",e.msg);
+        return 0;
+    }
+}        
+    
+
+\end{v}
+
+

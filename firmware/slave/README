@@ -1,0 +1,4 @@
+blift - build a lift slave
+bdrive - build a drive/steer slave
+changeid n - change the ID of the connected slave to n
+upload n - upload the firmware just built, then changeid n.

@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "#define DRIVESTEER 0" > src/liftorsteer.h
+ino build
+

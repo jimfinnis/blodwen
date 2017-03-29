@@ -1,0 +1,9 @@
+#!/bin/sh
+find . -name "*~" -print -delete
+find . -name "*.aux" -print -delete
+find . -name "*.pdf" -print -delete
+find . -name "*.log" -print -delete
+find . -name "*.toc" -print -delete
+find . -name "*.backup" -print -delete
+find . -name "out.*" -print -delete
+

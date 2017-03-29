@@ -1,0 +1,2 @@
+runghc regparse.hs regDefinitions
+cp regsauto.cpp regsauto.ino

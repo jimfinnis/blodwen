@@ -1,0 +1,153 @@
+\section{Safety}
+\label{safta}
+Safety is achieved through two mechanisms:
+\begin{itemize}
+\item \textbf{Constraints} can be set on certain quantities
+which are checked at all possible levels;
+\item \textbf{Exceptions} are raised when certain conditions are met or
+constraints are violated. It may be possible to stop certain contraints
+from throwing exceptions.
+\end{itemize}
+
+\subsection{Input constraints}
+The simplest constraints are the limits placed on input values, typically the
+required positions and speeds. These are already adequately handled by the
+register mapping system --- if an attempt is made to set a register to a value
+which is outside its mapped range, a \emph{SlaveException} is thrown by
+the PC code.
+
+\subsubsection{Lift constraints}
+Lift constraints are more complex, as they involve detecting combinations
+of required inputs which would cause a clash of legs. This is done at the PC
+API level, in the \texttt{isAdjacencyViolated()} method of \emph{LiftMotor.} 
+
+This looks at adjacent pairs of legs when \texttt{setRequired()} is called,
+and if one leg is requested negative
+while the leg on its negative side is requested positive (or \emph{vice versa})
+a \emph{ConstraintException} is thrown.
+
+\subsection{Rover exceptions}
+Another set of constraints operate at the slave level to detect stalls,
+encoder malfunctions and other problems. They work by examining the speed at
+which the motor is moving, the control signal being sent to the motor, and the
+current flowing. The errors produced, if any, in all combinations of these
+values are are shown in figure~\ref{errorstatestab}.
+
+\begin{center}
+\fbox{\parbox{4in}{
+Currently this code is \textbf{disabled} because it leads to too many
+false positives.
+This has been done by setting the \texttt{STALLCHECK} value to 255 --- the
+(unsigned 8 bit) ``stall state counter,'' which is incremented each tick
+the system is in such a state, must exceed this value before a
+stall/fault is detected.
+}}
+\end{center}
+
+
+\begin{figure}[ht]
+\center
+\begin{tabular}{|l|l|l|l|}\hline
+Speed & Control value & Current & Result \\ \hline
+Stop & Low & Zero & \\
+Stop & Low & Low & \\
+Stop & Low & Nominal/High & SHORT\\
+Stop & High & Zero &  FAULT (drive)\\
+Stop & High & Low &  FAULT (encoder)\\
+Stop & High & Nominal & STALL \\
+Run & Low & Zero & ? \\
+Run & Low & Low & ? \\
+Run & Low & Nominal & ? \\
+Run & High & Zero & ? \\
+Run & High & Low &  \\
+Run & High & Nominal &  \\ 
+- & High & High & OVERCURRENT\\ \hline
+\end{tabular}
+\caption{Error table}
+\label{errorstatestab}
+\end{figure}
+\begin{itemize}
+\item \textbf{Short} --- there is a short in the drive wires, so a high
+current is being passed without the motor turning;
+\item \textbf{Fault} --- there is either a break in the drive wires;
+(in which case the current will be zero) or a fault in the encoder or
+encoder wires (in which case the current will be non-zero);
+\item \textbf{Stall} --- the motor is unable to move;
+\item \textbf{Overcurrent} --- too high a current through the motor;
+\item \textbf{?} --- probably inertial effects, ignore.
+\end{itemize}
+When such a condition occurs, the slave goes into the exception state
+and informs the master. The master then transmits a message to all the
+slaves, so they also go into an exception state. Exception data includes:
+\begin{itemize}
+\item The motor ID on the controller (0 or 1)
+\item The type of the exception
+\end{itemize}
+After an exception, therefore, the slaves will all be in an exception state.
+Most will be showing the REMOTE exception, but one will show the
+original problem and the motor for which it occurred.
+
+Exception states and transitions are shown in Figure~\ref{exceptionfig}. Dotted
+lines indicate causation, so a dotted line from a transitions to another
+transition indicates that the first transition causes the second.
+\begin{figure}[ht]
+\center
+\includegraphics[width=5in]{exceptions.pdf}
+\caption{Exception states}
+\label{exceptionfig}
+\end{figure}
+
+
+\subsubsection{Exception transitions}
+Firstly, both the slaves and master \textbf{start in the exception state}. This
+is because, in the case of a communications error, the \isqc{} routines
+will stall, causing the processor to reboot when the watchdog times out.
+
+It is the responsibility of the PC library to reset the all slaves, and then
+reset the master, when the system starts up. If an exception occurs
+later, the master and slaves will once again be in the exception state
+and the PC code will again have to reset them.
+
+If a ``normal'' exception (i.e. not a communications error) occurs
+on a slave, the slave goes into the exception state and reports the error
+to the master, which also goes into the exception state and tells all other
+slaves to do the same. The exception registers on the master will hold
+information about the original slave's exception.
+
+In addition, the failure
+of a slave to respond to a message will cause it to reboot, which will
+cause the master to reboot (this is the only failure mode possible for \isqc{}) which will send 
+RESET messages to all slaves. The result is all devices in exception.
+
+\subsubsection{Exception actions}
+On entry to the exception state, the master signals all the slaves to
+also go into exception. The slaves, in an exception state, do the following:
+\begin{itemize}
+\item Set both negative and positive pins of the motors to LOW
+\item Set the duty cycle on the enable pins to zero
+\end{itemize}
+This causes the motors to perform an unbraked stop.
+
+In the exception state, register values can be changed but will have no effect
+until the exception is reset, because the control loop does not run in
+exception\footnote{In an earlier version, register changes were ignored. This
+led to the problem of being unable to recover from an error resulting from a
+bad register setting (such as overcurrent threshold to zero.)}. It's important
+to note that the \textbf{boot exception will have set all values to their
+defaults.} This is not the case for other exceptions.
+
+
+\subsubsection{State flags}
+The exception substates for the master are:
+\begin{itemize}
+\item Boot state (could be caused by \isqc{} comms failure)
+\item Problem reported by slave (ID and problem specified)
+\end{itemize}
+The exception substates for the slaves are:
+\begin{itemize}
+\item Boot state (powerup, or signalled by master using RESET command)
+\item Local problem as shown in figure~\ref{errorstatestab}
+\item Problem with another slave, reported by master
+\item Halt state (used when a comms error occurs, forces the master to reboot)
+\end{itemize}
+

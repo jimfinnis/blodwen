@@ -1,0 +1,17 @@
+#!/bin/bash
+# Script used for building the Blodwen static library archive.
+#
+echo "Making archive"
+rm -rf blodwen
+mkdir blodwen
+cp $1/libblodwen.a blodwen
+cp *.h blodwen
+
+cat >blodwen/README <<EOT
+Blodwen rover library and associated include files. The main include
+is rover.h
+
+This library built $(date)
+EOT
+
+tar cflvz blodwen.tgz blodwen

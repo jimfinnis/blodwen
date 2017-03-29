@@ -1,0 +1,103 @@
+/**
+ * \file 
+ *
+ * 
+ * \author $Author$
+ * \date $Date$
+ */
+
+
+#ifndef __SERIAL_H
+#define __SERIAL_H
+
+#include <stdarg.h>
+
+#define MAXLINELENGTH 32
+
+/// the interface for objects which respond to serial input
+
+class SerialListener {
+public:
+    /// called when a serial buffer gets a whole string.
+    virtual void process(class SerialBuffer *src,const char *s)=0;
+};
+
+/// a buffer for managing lines of serial input, building
+/// up a line of text by frequent polling
+/// and calling process() when a full line has been read.
+/// Does NOT initialise the serial port.
+
+class SerialBuffer {
+    char buf[MAXLINELENGTH];
+    int ct;
+    bool hasRoom;
+    SerialListener *listener;
+    
+public:    
+    /// construct, given a SerialListener
+    SerialBuffer(SerialListener *p){
+        hasRoom=true;
+        ct=0;
+        setListener(p);
+    }
+    
+    /// set the listener
+    void setListener(SerialListener *p){
+        listener = p;
+    }
+    
+    /// send an error code and a message to go with it
+    void error(int code,const char *msg){
+        char buf[256];
+        sprintf(buf,"%03d %s",code,msg);
+        Serial.println(buf);
+    }
+    
+    /// send the success code
+    void success(const char *f,...){
+        char buf[256];
+        va_list args;
+        va_start(args,f);
+        vsprintf(buf,f,args);
+        error(0,buf);
+        va_end(args);
+    }
+    
+    /// send the success code
+    void success(){
+        error(0,"OK");
+    }
+        
+    
+    /// read a line, adding it to the buffer until we get a CR (13)
+    void poll(){
+        while(Serial.available()){
+            char c = Serial.read();
+            if(hasRoom){
+                if(c==13){
+                    buf[ct++]=0;
+                    ct=0;
+                    hasRoom=true;
+                    if(listener)
+                        listener->process(this,buf);
+                } else {
+                    buf[ct++]=c;
+                    if(ct==32)
+                        hasRoom=false;
+                }
+            } else {
+                // if there's no room in the buffer, ignore everything
+                // a CR, at which point restart the line - the data
+                // in the buffer up until then will be discarded.
+                // We send back an error code.
+                if(c==13){
+                    hasRoom=true;
+                    ct=0;
+                    error(1,"line was too long");
+                }
+            }
+        }
+    }
+};
+
+#endif /* __SERIAL_H */

@@ -1,0 +1,121 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  System        : 
+%  Module        : 
+%  Object Name   : $RCSfile$
+%  Revision      : $Revision$
+%  Date          : $Date$
+%  Author        : $Author$
+%  Created By    : Jim Finnis
+%  Created       : Mon Oct 4 09:50:39 2010
+%  Last Modified : <150408.1206>
+%
+%  Description 
+%
+%  Notes
+%
+%  History
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Copyright (c) 2010 Jim Finnis.
+% 
+% All Rights Reserved.
+% 
+% This  document  may  not, in  whole  or in  part, be  copied,  photocopied,
+% reproduced,  translated,  or  reduced to any  electronic  medium or machine
+% readable form without prior written consent from Jim Finnis.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[a4paper]{article}
+\usepackage{wrapfig}
+\usepackage[pdftex]{graphicx}
+%\usepackage[version=3]{mhchem}
+\usepackage{fancyvrb}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{amssymb}
+\usepackage{enumitem}
+
+\usepackage[hmargin=2.5cm,vmargin=3.5cm]{geometry}
+\usepackage{multicol}
+% In math mode, put a word into text inside anglebrackets. Used for BNF, sometimes.
+\newcommand{\angb}[1]{\text{$<$\\#1$>$}}
+
+% so we can do 3\e{4} to do 3x10^4
+\providecommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+
+
+\newenvironment{prettycode}
+{\begin{quote}\ttfamily\small}
+{\end{quote}}
+
+\DefineVerbatimEnvironment{v}{Verbatim}{
+    %numbers=left,numbersep=5pt,
+    %frame=lines,framerule=0.5mm,
+    fontsize=\small,xleftmargin=15pt}
+\DefineVerbatimEnvironment{vv}{Verbatim}{
+    %numbers=left,numbersep=5pt,
+    %frame=lines,framerule=0.5mm,
+    fontsize=\small,xleftmargin=15pt}
+\DefineVerbatimEnvironment{v2}{Verbatim}{
+    %numbers=left,numbersep=5pt,
+    %frame=lines,framerule=0.5mm,
+    fontsize=\scriptsize,xleftmargin=0pt}
+\DefineVerbatimEnvironment{v3}{Verbatim}{
+    %numbers=left,numbersep=5pt,
+    %frame=lines,framerule=0.5mm,
+    fontsize=\tiny,xleftmargin=0pt}
+\DefineVerbatimEnvironment{bv2}{BVerbatim}{
+    %numbers=left,numbersep=5pt,
+    %frame=lines,framerule=0.5mm,
+    fontsize=\scriptsize,xleftmargin=0pt}
+\DefineVerbatimEnvironment{bv}{BVerbatim}{
+    %numbers=left,numbersep=5pt,
+    %frame=lines,framerule=0.5mm,
+    fontsize=\scriptsize,xleftmargin=0pt}
+\DefineVerbatimEnvironment{bvc}{BVerbatim}{
+    %numbers=left,numbersep=5pt,
+    %frame=lines,framerule=0.5mm
+    commandchars=+\[\],
+    fontsize=\scriptsize,xleftmargin=0pt}
+
+\setcounter{secnumdepth}{5}
+\setcounter{tocdepth}{5}
+
+\title{Blodwen rover documentation}
+\date{\today}
+\author{James Finnis, jcf1@aber.ac.uk}
+
+\begin{document}
+\maketitle
+\newpage
+\tableofcontents
+
+\newcommand{\isqc}{$\mathrm{I}^2\mathrm{C}$}
+
+\newcommand{\todo}[1]{
+    \begin{center}
+    \fbox{\parbox{4in}{\textbf{To Do}\vspace*{1em} \\#1}}
+    \end{center}}
+
+\newcommand{\boxy}[1]{
+    \begin{center}
+    \fbox{\parbox{4in}{#1}}
+    \end{center}}
+    
+% level 2 lists are normally indicated by dashes - I'm changing this
+% because it looks too much like a minus sign.
+\renewcommand{\labelitemii}{$\circ$}
+
+\include{intro}
+\include{hardware}
+\include{pc}
+\include{masterfirm}
+\include{slavefirm}
+\include{safety}
+\include{todo}
+
+\end{document}

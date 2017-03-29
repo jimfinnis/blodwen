@@ -1,0 +1,18 @@
+digraph{
+rankdir="LR"
+node[shape=box,fontsize=12]
+edge[fontsize=10]
+
+pc [label="PC"]
+ard [label="Arduino"]
+mcs [label="motor\ncontrollers"]
+motors [fillcolor=gray ,style=filled]
+
+pc -> ard [label="reg\nwrite"]
+ard -> pc [label="reg\nread"]
+ard -> mcs [label="reg\nwrite"]
+mcs -> ard [label="reg\nread"]
+
+mcs -> motors [label="control"]
+motors -> mcs [label="sensors"]
+}

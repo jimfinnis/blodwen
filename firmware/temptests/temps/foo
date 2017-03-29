@@ -1,0 +1,69 @@
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+
+OneWire oneWire(6);
+DallasTemperature sensors(&oneWire);
+
+int devs;
+int curdev=0;
+unsigned long lastcheck = 0;
+
+
+void setup()
+{
+    Serial.begin(9600);
+    sensors.begin();
+    delay(2000);
+    sensors.setCheckForConversion(false);
+    sensors.setWaitForConversion(false);
+    delay(2000); 
+    
+    devs = sensors.getDeviceCount();
+    
+    Serial.print("Devices: ");
+    Serial.println(devs);
+    if(sensors.isParasitePowerMode())Serial.println("parasite mode");
+    
+    Serial.println(sensors.requestTemperaturesByIndex(curdev)?"req OK":"bad req");
+    lastcheck=millis();
+}
+
+
+void loop()
+{
+    /*
+    unsigned long now = millis();
+    if(now-lastcheck > 5000) {
+        DeviceAddress addr;
+        sensors.getAddress(addr,curdev);
+        if(sensors.isConversionAvailable(addr)){
+            lastcheck=now;
+            float f = sensors.getTempC(addr);
+            Serial.print("conversion complete: ");
+            Serial.print(curdev);
+            Serial.print(" temperature is ");
+            Serial.println(f);
+            
+            curdev++;
+            curdev%=devs;
+            if(!sensors.requestTemperaturesByIndex(curdev))
+                Serial.println("disconnected");
+            
+        }
+    }
+     */
+    
+    delay(2000);
+    Serial.println(sensors.getTempCByIndex(0));
+    
+/*    
+    DeviceAddress addr;
+    sensors.getAddress(addr,0);
+    sensors.requestTemperaturesByAddress(addr);
+    delay(2000);
+    Serial.println(sensors.getTempCByIndex(0));
+ */          
+    
+    
+}

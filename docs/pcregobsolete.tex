@@ -1,0 +1,185 @@
+
+\subsection{Register interface}
+This interface uses a TCP/IP server based on the C++ library code described above. It maps
+the functionality of the library onto a simple register-based interface.
+
+Communication is connection-based, via TCP sockets.
+
+\subsubsection{Basic protocol}
+The protocol is similar to the firmware protocol described in
+section~\ref{protoc}, except that the ``destination'' object --- the object
+whose registers we wish to inspect or change --- is now a wheel, rather than a slave controller.
+
+As in that protocol, client to server messages are of variable length, and are
+preceded by the message length in bytes and a single byte encoding both the message
+type and the desired wheel (message type in bottom 4 bits, wheel in top 4); while server
+responses are either a single byte response or a set of 
+register values. The message types are write, set a read set, and read (to which
+the server responds by sending the values of the registers specified in the given read set.) For more
+details, see the section referenced above; but it's worth mentioning here that the
+\textbf{read sets are shared across all devices.}
+Some examples:
+\subsubsection{Example 1: write}
+PC to master: \verb+0d 32 04 00 ff 01 ff 02 01 00 03 02 00+ \\
+Response: \verb+00+ 
+\begin{itemize}
+\item \verb+0d 32+:  13 bytes, wheel 3, command 2 (write)
+\item \verb+04+: contains 4 writes
+\item \verb+00 ff+ write \verb+ff+ to register 0
+\item \verb+01 ff+ write \verb+ff+ to register 1
+\item \verb+02 01 00 + write \verb+0001+ to register 2
+\item \verb+03 02 00 + write \verb+0002+ to register 3
+\end{itemize}
+Response is:
+\begin{itemize}
+\item 0 : success
+\item 1 : register out of range (i.e. that register does not exist)
+\item 2 : register is not writable
+\item 3 : register write not yet implemented for this register
+\end{itemize}
+
+
+\subsubsection{Example 2: set read set}
+PC to master: \verb+07 04 01 00 01 02 03+ \\
+Response: \verb+04+ 
+\begin{itemize}
+\item \verb+07 24+: 7 bytes, wheel 0, command 4 (set read set.) We specify wheel 0 because read sets 
+are shared across all devices --- the wheel number is ignored.
+\item \verb+01+ : read set 1
+\item \verb+00 01 02 03+ : registers 0, 1, 2 and 3
+should be the new read set 1.
+\end{itemize}
+The response is \verb+04+, the number of registers in the read set.
+
+\subsubsection{Example 3: read}
+PC to master: \verb+03 12 01+ \\
+Response: \verb+ff ff 01 00 02 00+ 
+\begin{itemize}
+\item \verb+03 12+ : 3 bytes, wheel 1, command 2 (read)
+\item \verb+01+ : return the values of the registers in read set 1
+\end{itemize}
+The response is the values of the registers:
+\begin{itemize}
+\item \verb+ff+ : register 0 contains \verb+ff+ 
+\item \verb+ff+ : register 1 contains \verb+ff+ 
+\item \verb+01 00+ : register 2 contains \verb+0001+ 
+\item \verb+02 00+ : register 3 contains \verb+0002+ 
+\end{itemize}
+
+\subsubsection{Wheel Registers}
+These registers are \textbf{per wheel}: the wheel number must be nonzero.
+
+\vspace*{1em}
+
+\begin{tabular}{|p{0.2in}|p{2.7in}|p{0.1in}|p{0.1in}|p{1in}|p{1.5in}|}\hline
+\textbf{ID} & \textbf{Symbol} & \textbf{n} & \textbf{W} & \textbf{Mapping} & \textbf{Description}  \\ \hline 
+0 & REGW\_DRIVE\_RESET & 1 & Y & unmapped & set nonzero to reset overcurrent\\ \hline
+1 & REGW\_DRIVE\_REQSPEED & 2 & Y & [-4000.0,4000.0] & required speed\\ \hline
+2 & REGW\_DRIVE\_PGAIN & 2 & Y & [0.0,10.0] & P-gain\\ \hline
+3 & REGW\_DRIVE\_IGAIN & 2 & Y & [0.0,10.0] & I-gain\\ \hline
+4 & REGW\_DRIVE\_DGAIN & 2 & Y & [-10.0,10.0] & D-gain\\ \hline
+5 & REGW\_DRIVE\_INTEGRALCAP & 2 & Y & [0.0,1000.0] & integral error cap\\ \hline
+6 & REGW\_DRIVE\_INTEGRALDECAY & 2 & Y & [0.0,1.0] & integral decay\\ \hline
+7 & REGW\_DRIVE\_OVERCURRENTTHRESH & 2 & Y & [0.0,1000.0] & overcurrent threshold\\ \hline
+8 & REGW\_DRIVE\_ACTUALSPEED & 2 &  & [-4000.0,4000.0] & actual speed from encoder\\ \hline
+9 & REGW\_DRIVE\_ERROR & 2 &  & [-1000.0,1000.0] & required minus actual speed\\ \hline
+10 & REGW\_DRIVE\_ERRORINTEGRAL & 2 &  & [-1000.0,1000.0] & error integral magnitude\\ \hline
+11 & REGW\_DRIVE\_ERRORDERIV & 2 &  & [-200.0,200.0] & error derivative\\ \hline
+12 & REGW\_DRIVE\_CONTROL & 2 &  & [-1024.0,1024.0] & value being sent to motor\\ \hline
+13 & REGW\_DRIVE\_INTERVALCTRL & 2 &  & [0.0,1000.0] & time between control runs (ms)\\ \hline
+14 & REGW\_DRIVE\_CURRENT & 2 &  & unmapped & raw current reading\\ \hline
+15 & REGW\_STEER\_RESET & 1 & Y & unmapped & set nonzero to reset overcurrent\\ \hline
+16 & REGW\_STEER\_REQPOS & 2 & Y & [0.0,1024.0] & required position\\ \hline
+17 & REGW\_STEER\_PGAIN & 2 & Y & [0.0,10.0] & P-gain\\ \hline
+18 & REGW\_STEER\_IGAIN & 2 & Y & [0.0,10.0] & I-gain\\ \hline
+19 & REGW\_STEER\_DGAIN & 2 & Y & [-10.0,10.0] & D-gain\\ \hline
+20 & REGW\_STEER\_INTEGRALCAP & 2 & Y & [0.0,1000.0] & integral error cap\\ \hline
+\end{tabular}
+
+\begin{tabular}{|p{0.2in}|p{2.7in}|p{0.1in}|p{0.1in}|p{1in}|p{1.5in}|}\hline
+\textbf{ID} & \textbf{Symbol} & \textbf{n} & \textbf{W} & \textbf{Mapping} & \textbf{Description}  \\ \hline 
+21 & REGW\_STEER\_INTEGRALDECAY & 2 & Y & [0.0,1.0] & integral decay\\ \hline
+22 & REGW\_STEER\_OVERCURRENTTHRESH & 2 & Y & [0.0,1000.0] & overcurrent threshold\\ \hline
+23 & REGW\_STEER\_ACTUALPOS & 2 &  & [0.0,1024.0] & actual position from pot\\ \hline
+24 & REGW\_STEER\_ERROR & 2 &  & [-1000.0,1000.0] & required minus actual position\\ \hline
+25 & REGW\_STEER\_ERRORINTEGRAL & 2 &  & [-1000.0,1000.0] & error integral magnitude\\ \hline
+26 & REGW\_STEER\_ERRORDERIV & 2 &  & [-200.0,200.0] & error derivative\\ \hline
+27 & REGW\_STEER\_CONTROL & 2 &  & [-1024.0,1024.0] & value being sent to motor\\ \hline
+28 & REGW\_STEER\_INTERVALCTRL & 2 &  & [0.0,1000.0] & time between control runs (ms)\\ \hline
+29 & REGW\_STEER\_CURRENT & 2 &  & unmapped & raw current reading\\ \hline
+30 & REGW\_STEER\_CALIBMIN & 2 &  & [-512.0,512.0] & calibration minimum\\ \hline
+31 & REGW\_STEER\_CALIBMAX & 2 &  & [-512.0,512.0] & calibration minimum\\ \hline
+32 & REGW\_LIFT\_RESET & 1 & Y & unmapped & set nonzero to reset overcurrent\\ \hline
+33 & REGW\_LIFT\_REQPOS & 2 & Y & [0.0,1024.0] & required position\\ \hline
+34 & REGW\_LIFT\_PGAIN & 2 & Y & [0.0,10.0] & P-gain\\ \hline
+35 & REGW\_LIFT\_IGAIN & 2 & Y & [0.0,10.0] & I-gain\\ \hline
+36 & REGW\_LIFT\_DGAIN & 2 & Y & [-10.0,10.0] & D-gain\\ \hline
+37 & REGW\_LIFT\_INTEGRALCAP & 2 & Y & [0.0,1000.0] & integral error cap\\ \hline
+38 & REGW\_LIFT\_INTEGRALDECAY & 2 & Y & [0.0,1.0] & integral decay\\ \hline
+39 & REGW\_LIFT\_OVERCURRENTTHRESH & 2 & Y & [0.0,1000.0] & overcurrent threshold\\ \hline
+40 & REGW\_LIFT\_ACTUALPOS & 2 &  & [0.0,1024.0] & actual position from pot\\ \hline
+41 & REGW\_LIFT\_ERROR & 2 &  & [-1000.0,1000.0] & required minus actual position\\ \hline
+42 & REGW\_LIFT\_ERRORINTEGRAL & 2 &  & [-1000.0,1000.0] & error integral magnitude\\ \hline
+43 & REGW\_LIFT\_ERRORDERIV & 2 &  & [-200.0,200.0] & error derivative\\ \hline
+44 & REGW\_LIFT\_CONTROL & 2 &  & [-1024.0,1024.0] & value being sent to motor\\ \hline
+45 & REGW\_LIFT\_INTERVALCTRL & 2 &  & [0.0,1000.0] & time between control runs (ms)\\ \hline
+46 & REGW\_LIFT\_CURRENT & 2 &  & unmapped & raw current reading\\ \hline
+47 & REGW\_LIFT\_CALIBMIN & 2 &  & [-512.0,512.0] & calibration minimum\\ \hline
+48 & REGW\_LIFT\_CALIBMAX & 2 &  & [-512.0,512.0] & calibration minimum\\ \hline
+\end{tabular}
+\clearpage
+\subsubsection{Master registers}
+The registers below are master registers for the whole system, for which the wheel number
+should be zero. Note that the exceptions are handled by individual registers for each slave device rather than
+by wheels --- this is because there is no 1-to-1 mapping between wheels and devices.
+
+\vspace*{1em}
+
+\begin{tabular}{|p{0.2in}|p{2.3in}|p{0.1in}|p{0.1in}|p{0.7in}|p{2in}|}\hline
+\textbf{ID} & \textbf{Symbol} & \textbf{n} & \textbf{W} & \textbf{Mapping} & \textbf{Description}  \\ \hline 
+0 & REGM\_TEMP1 & 2 &  & [0.0,1024.0] & temperature sensor\\ \hline
+1 & REGM\_TEMP2 & 2 &  & [0.0,1024.0] & temperature sensor\\ \hline
+2 & REGM\_TEMP3 & 2 &  & [0.0,1024.0] & temperature sensor\\ \hline
+3 & REGM\_TEMP4 & 2 &  & [0.0,1024.0] & temperature sensor\\ \hline
+4 & REGM\_TEMP5 & 2 &  & [0.0,1024.0] & temperature sensor\\ \hline
+5 & REGM\_TEMP6 & 2 &  & [0.0,1024.0] & temperature sensor\\ \hline
+6 & REGM\_RESET & 1 &  & unmapped & set to stop and reset system\\ \hline
+7 & REGM\_DEBUGLED & 1 & Y & unmapped & debugging LEDs, turns on for some time\\ \hline
+8 & REGM\_TIMER & 2 &  & unmapped & millis since start\\ \hline
+9 & REGM\_INTERVALI2C & 2 &  & unmapped & interval between I2C ticks\\ \hline
+10 & REGM\_STATUS & 2 &  & unmapped & status flags\\ \hline
+11 & REGM\_EXCEPT1 & 1 &  & unmapped & exception state of device 1\\ \hline
+12 & REGM\_EXCEPT2 & 1 &  & unmapped & exception state of device 2\\ \hline
+13 & REGM\_EXCEPT3 & 1 &  & unmapped & exception state of device 3\\ \hline
+14 & REGM\_EXCEPT4 & 1 &  & unmapped & exception state of device 4\\ \hline
+15 & REGM\_EXCEPT5 & 1 &  & unmapped & exception state of device 5\\ \hline
+16 & REGM\_EXCEPT6 & 1 &  & unmapped & exception state of device 6\\ \hline
+17 & REGM\_EXCEPT7 & 1 &  & unmapped & exception state of device 7\\ \hline
+18 & REGM\_EXCEPT8 & 1 &  & unmapped & exception state of device 8\\ \hline
+19 & REGM\_EXCEPT9 & 1 &  & unmapped & exception state of device 9\\ \hline
+20 & REGM\_DISABLEDEXCEPTIONS1 & 1 & Y & unmapped & bitmap of disabled exceptions in dev. 1\\ \hline
+21 & REGM\_DISABLEDEXCEPTIONS2 & 1 & Y & unmapped & bitmap of disabled exceptions in dev. 2\\ \hline
+22 & REGM\_DISABLEDEXCEPTIONS3 & 1 & Y & unmapped & bitmap of disabled exceptions in dev. 3\\ \hline
+23 & REGM\_DISABLEDEXCEPTIONS4 & 1 & Y & unmapped & bitmap of disabled exceptions in dev. 4\\ \hline
+24 & REGM\_DISABLEDEXCEPTIONS5 & 1 & Y & unmapped & bitmap of disabled exceptions in dev. 5\\ \hline
+25 & REGM\_DISABLEDEXCEPTIONS6 & 1 & Y & unmapped & bitmap of disabled exceptions in dev. 6\\ \hline
+26 & REGM\_DISABLEDEXCEPTIONS7 & 1 & Y & unmapped & bitmap of disabled exceptions in dev. 7\\ \hline
+27 & REGM\_DISABLEDEXCEPTIONS8 & 1 & Y & unmapped & bitmap of disabled exceptions in dev. 8\\ \hline
+28 & REGM\_DISABLEDEXCEPTIONS9 & 1 & Y & unmapped & bitmap of disabled exceptions in dev. 9\\ \hline
+29 & REGM\_TIMEOUT & 1 & Y & [0.0,30.0] & server timeout in seconds\\ \hline
+\end{tabular}
+
+\subsubsection{Multiple clients}
+The server can handle up to 4 clients connected at any one time (and this
+number can easily be changed in the code.) All state is shared across
+the clients --- notably, changing the read set on one client will change it
+on all of them, because they all communicate with the same devices!
+
+\subsubsection{Disconnection}
+The server will detect if a client closes its end of the socket, and will
+disconnect itself, freeing up the client slot. However, this will not
+deal with all circumstances. To this end, there is a timeout register
+\verb+REGM_TIMEOUT+. If a client does not communicate with the server
+within this time, it is considered to be disconnected by the server,
+and the server end of the socket is closed. The client should
+do something similar. The default value is 5 seconds.

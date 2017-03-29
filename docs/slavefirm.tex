@@ -1,0 +1,185 @@
+\section{Slave firmware}
+\boxy{You probably don't need to read this section unless you're maintaining
+the code for the slave controllers.}
+The slave firmware processes incoming \isqc{} messages,
+reads encoders and potentiometers, and
+handles control of the motors. It's the most complex part
+of the code.
+
+
+\subsection{I2C slave code (slave\_i2c.h)}
+This code implements the communications as an abstract class and 
+a namespace.
+
+\subsubsection{I2CSlave namespace}
+This sets up \isqc{} and handles communications from the master using listener classes (actual communications are
+handled by the Wire library and interrupt callbacks.)
+The methods are:
+\begin{itemize}
+\item \textbf{init} initialises comms with a given device address, which must be
+unique for each device. It also takes a pointer to the register table, which is in the same format as that passed
+to the master firmware's \emph{I2CSlave} class constructor, and is stored in the \textbf{regs.ino} file
+in the common directory.
+\item \textbf{setRegister} changes the value of a register, so that it can then be read by the master.
+\item \textbf{addListener} adds an event listener (see below) to the system, which will be informed on register writes.
+\item \textbf{poll} should be called periodically, and checks whether any registers have been changed since it
+was last called. If so, it will call the listener with the register index and new value.
+\end{itemize}
+
+\subsubsection{I2CSlaveListener}
+This is an abstract class, implementations of which can be added to the list of listeners (see above.)
+When a register has changed, the \emph{changeEvent()} method is called with the register index and new value ---
+but only when \emph{poll()} is called.
+
+There is also a \emph{changeEventImmediate()} callback, which will be called
+from inside the interrupt as soon as the new data arrives. Because it requires
+a little more processing, this mechanism is disabled by default.
+
+Therefore, when a register is changed, the hardware will only take action when the listener's \emph{changeEvent()} is called
+at the next poll. \textbf{This may lead to a very slight delay.} 
+
+\subsubsection{I2CLoop() in i2c.ino}
+This is called repeatedly during the run, as fast as possible. It does the following:
+\begin{itemize}
+\item Calls \emph{poll()} so that received messages will cause registers to change. These changes will be handled by the
+\emph{MyI2CListener} object --- for example, writing a required speed to the REG\_SPEED register for a speed motor
+will cause \emph{setRequiredSpeed()} to be called with that value on that motor.
+\item Sets monitoring registers with values from the motors.
+\end{itemize}
+
+
+
+\subsubsection{Low-level I2C code}
+Callbacks are registered with the Wire library, which are called from the I2C interrupt inside the library. They work thus:
+\begin{itemize}
+\item \textbf{receiveEvent} is used when data is written to the slave. The current register is set to
+the first byte of the data, and if there are any more bytes, these are written to the register using the
+methods given above.
+This causes the register's changed bit to be set, so that \emph{poll()} will call a listener when next called.
+\item \textbf{requestEvent} is used when a request is made for data. It assumes that the \emph{receiveEvent()} has been called, and has set the current register number, and writes the value
+of the register to the bus. If the register doesn't exist a dummy value (\texttt{0xcd)} is written.
+\end{itemize}
+It follows therefore that on both master and slave \emph{reading is more expensive than writing,} because two things
+happen: a message is received which sets the register number, and then data is requested.
+
+\subsection{Motors (motor.h)}
+A \emph{MotorController} class is used as the basic core of motor functionality. It has:
+\begin{itemize}
+\item the enable, positive and negative pin assignments;
+\item methods to set both pins high or low for braking;
+\item methods to set the speed;
+\item methods for current monitoring including hysteresis using a geometric decay;
+\item a pointer to a chain of \emph{MotorListeners} for handling overcurrent events, with
+a programmable overcurrent threshold.
+\end{itemize}
+
+\subsection{PIDController (pid.h)}
+This class wraps the \emph{MotorController} class with PID calculations,
+used by both speed and position motors. The PID results
+are used slightly differently by the two subclasses.
+It provides:
+\begin{itemize}
+\item methods for setting the desired value (speed or position);
+\item methods for setting the gains;
+\item monitoring methods (e.g. \emph{getError()};
+\item an \emph{update()} method which must be called every tick;
+\end{itemize}
+
+
+\subsection{Speed motors (speedmotor.h)}
+\emph{SpeedMotorController} is an extension of \emph{PIDController} which
+uses a PID controller for speed, using a quadrature encoder as the sensor. As such,
+it provides:
+\begin{itemize}
+\item a \emph{tickEncoder()} method which must be called whenever the encoder's A channel gets a rising edge;
+\item a method to be called when ADC on the current monitors is completed, to update that value.
+\end{itemize}
+
+\subsubsection{Encoders (quadencoder.h) and the encoder interrupt}
+The \emph{QuadEncoder} class is normally used only by \emph{SpeedMotorController}. It assumes that the encoder is wired
+to port D, pins 0 and 1 for channels A and B respectively (usually these are the RX and TX pins, or digital pins 0 and 1.)
+This means that each controller slave can only handle a single encoder motor.
+
+An interrupt is required to use the encoder --- on port D pin 0 rising edge, the \emph{tickEncoder()} method
+must be called on the \emph{SpeedMotorController} instance. This is set up thus in \textbf{sketch.ino}:
+\begin{v}
+void setupEncoderISR(){
+    cli();
+    PCMSK2 |= 1<<PCINT16; // PD-0.
+    PCICR |= 1<<PCIE2; // turn on ints for port D
+    sei();
+}
+ISR(PCINT2_vect){
+    if(PIND & 1) // rising edge on pin 0
+        driveMotor.tickEncoder();
+}
+\end{v}
+
+\subsection{Position motors (posmotor.h) }
+\emph{PositionMotorController} is an extension of \emph{PIDController} which uses the PID controller
+for positional control, using a potentiometer.
+
+\subsubsection{Calibration}
+Each positional motor's potentiometer is connected to an ADC which produces a value in the range 0-1023. This value
+is mapped onto a user-specified range, given by the calibration registers which are initialised to the range
+-512 to 512.
+
+\subsection{ADC (adc.h/adc.ino)}
+The \emph{ADCReader} class simplifies the process of running
+a series of free-running ADC reads. Only one read can be running at a time,
+so the ADC reader cycles through multiple reads which the developer can register
+with it. When a read
+completes, it calls a method in a \emph{ADCListener} class
+giving the value, and starts the next read running. Methods are:
+\begin{itemize}
+\item \textbf{init()} : initialise (for which interrupts must be disabled)
+\item \textbf{poll()} which must be called regularly
+\item \textbf{addRead(channel,type,listener)} : register a new read, giving
+the ADC channel (i.e. the pin number), a type (which is an integer whose meaning is determined
+by the developer) and a pointer to the listener object. The listener is some implementation of the
+\textbf{ADCListener} interface, which will have a \textbf{onADC(type, value)} call.
+\end{itemize}
+ADC listeners are registered for all motors for current monitoring, the steer and lift motors for
+position monitoring, and the chassis system for inclinometer readings.
+
+\subsection{State}
+The \texttt{State} class handles exception states on both the slave
+and master, and is declared in \texttt{common.h} because it's
+used by both (with slight modifications.) Exceptions, when they
+occur, cause both a change in the state object and any exception
+listener registered with it to be notified.
+
+Exceptions are discussed further in section~\ref{safta}.
+
+\subsection{Main code (sketch.ino)}
+The main code consists of:
+\begin{itemize}
+\item A listener which sets LEDs when an exception occurs;
+\item Two motor instances (speed and position for drive/steer controllers, or two position motors for lift/lift 
+controllers;)
+\item An array of pointers to those motor instances, for convenience;
+\item various routines for handling PWM rate changing, and ADC work;
+\item Setup code;
+\item The main loop.
+\end{itemize}
+\subsubsection{Setup}
+\begin{itemize}
+\item Disable pullups for I2C and encoder
+\item Enable watchdog timer
+\item Set pin modes
+\item Read the I2C address from EEProm 
+\item Flash some lights
+\item Change the PWM frequency for the motors
+\item Setup the two motors with their pin assignments
+\item Register the ADC listeners
+\item Initialise ADC
+\item Set up the interrupt for the encoder if this is a drive/steer slave
+\item Initialise I2C comms
+\end{itemize}
+\subsubsection{Main loop}
+\begin{itemize}
+\item Poll the I2C system, setting monitoring registers to the values and calling update on the motors.
+\item Poll the ADC system, updating data on completion of an ADC and moving on to reading another value.
+\item Handle debugging LEDs
+\end{itemize}
+

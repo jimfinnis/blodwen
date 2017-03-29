@@ -1,0 +1,137 @@
+--
+-- This is the common block - these registers are prepended to 
+-- all the blocks below them. Each register is defined as
+--
+--      <name> [<writable>] <bytes> <description>
+--
+
+{
+    RESET                   writable    1 unmapped      "reset bits - beware race conditions"
+    TIMER                               2 unmapped      "millis since start"
+    INTERVALI2C                         2 unmapped      "interval between I2C ticks"
+    STATUS                              2 unmapped      "see status flags in regs.h"
+    DEBUGLED                writable    1 unmapped      "debugging LEDs, turns on for some time"
+    EXCEPTIONDATA           writable    2 unmapped      "LSB: type, MSB: id. Write causes REMOTE exception"
+    DISABLEDEXCEPTIONS      writable    2 unmapped      "bitfield of disabled exceptions"
+    PING                    writable    1 unmapped      "debugging"
+    DEBUG                   writable    2 unmapped      "debugging"
+}
+
+-- This block is the registers for DS(p) cards:
+-- each has a drive and steer motor, and some also read a
+-- chassis inclinometer pot.
+
+DS
+{
+    DRIVE_REQSPEED          writable    2 range -4000 4000    "required speed"
+    DRIVE_PGAIN             writable    2 range 0 10        "P-gain"
+    DRIVE_IGAIN             writable    2 range 0 10        "I-gain"
+    DRIVE_DGAIN             writable    2 range -10 10      "D-gain"
+    DRIVE_INTEGRALCAP       writable    2 range 0 1000      "integral error cap"
+    DRIVE_INTEGRALDECAY     writable    2 range 0 1       "integral decay"
+    DRIVE_OVERCURRENTTHRESH writable    2 range 0 1000      "overcurrent threshold"
+
+    DRIVE_ACTUALSPEED                   2 range -4000 4000      "actual speed from encoder"
+    DRIVE_ERROR                         2 range -1000 1000  "required minus actual speed"
+    DRIVE_ERRORINTEGRAL                 2 range -1000 1000  "error integral magnitude"
+    DRIVE_ERRORDERIV			2 range -200 200    "error derivative"
+    DRIVE_CONTROL                       2 range -255 255      "value being sent to motor"
+    DRIVE_INTERVALCTRL                  2 range 0 1000      "time between control runs (ms)"
+    DRIVE_CURRENT		        2 unmapped          "raw current reading"
+    DRIVE_ODO                           2 unmapped          "encoder ticks"
+    DRIVE_STALLCHECK	    writable	1 range 0 255      "stall check control signal level"
+    DRIVE_DEADZONE          writable    1 range 0 50      "if below this value, error is set to zero"
+
+    STEER_REQPOS            writable    2 range -200 200    "required position"
+    STEER_PGAIN             writable    2 range 0 100       "P-gain"
+    STEER_IGAIN             writable    2 range 0 10        "I-gain"
+    STEER_DGAIN             writable    2 range -10 10      "D-gain"
+    STEER_INTEGRALCAP       writable    2 range 0 1000      "integral error cap"
+    STEER_INTEGRALDECAY     writable    2 range 0 1         "integral decay"
+
+    STEER_OVERCURRENTTHRESH writable    2 range 0 1000      "overcurrent threshold"
+
+    STEER_ACTUALPOS                     2 range -200 200    "actual position from pot"
+    STEER_ERROR                         2 range -200 200  "required minus actual position"
+    STEER_ERRORINTEGRAL                 2 range -1000 1000  "error integral magnitude"
+    STEER_ERRORDERIV			2 range -200 200    "error derivative"
+    STEER_CONTROL                       2 range -255 255      "value being sent to motor"
+    STEER_INTERVALCTRL                  2 range 0 1000      "time between control runs (ms)"
+    STEER_CURRENT		        2 unmapped          "raw current reading"
+    STEER_STALLCHECK	    writable	1 range 0 255      "stall check control signal level"
+    STEER_DEADZONE          writable    1 range 0 50      "if below this value, error is set to zero"
+    STEER_CALIBMIN	    writable	1 range -120 120    "minimum angle, mapped onto pot value 0"
+    STEER_CALIBMAX          writable    1 range -120 120    "maximum angle, mapped onto pot value 1024"    
+    
+    CHASSIS                             2 range 0 1024      "chassis pot reading"
+}
+
+-- the lift/lift configuration's definitions
+
+LL
+{
+    ONE_REQPOS              writable    2 range -200 200    "required position"
+
+    ONE_PGAIN               writable    2 range 0 100        "P-gain"
+    ONE_IGAIN               writable    2 range 0 10        "I-gain"
+    ONE_DGAIN               writable    2 range -10 10      "D-gain"
+    ONE_INTEGRALCAP         writable    2 range 0 1000      "integral error cap"
+    ONE_INTEGRALDECAY       writable    2 range 0 1         "integral decay"
+
+    ONE_OVERCURRENTTHRESH   writable    2 range 0 1000      "overcurrent threshold"
+
+    ONE_ACTUALPOS                       2 range -200 200    "actual position from pot"
+    ONE_ERROR                           2 range -200 200  "required minus actual position"
+    ONE_ERRORINTEGRAL                   2 range -1000 1000  "error integral magnitude"
+    ONE_ERRORDERIV			2 range -200 200    "error derivative"
+    ONE_CONTROL                         2 range -255 255      "value being sent to motor"
+    ONE_INTERVALCTRL                    2 range 0 1000      "time between control runs (ms)"
+    ONE_CURRENT		                2 unmapped          "raw current reading"
+    ONE_CALIBMIN	    writable	1 range -120 120    "minimum angle, mapped onto pot value 0"
+    ONE_CALIBMAX            writable    1 range -120 120    "maximum angle, mapped onto pot value 1024"    
+    ONE_STALLCHECK	    writable	1 range 0 255      "stall check control signal level"
+    ONE_DEADZONE          writable    1 range 0 50      "if below this value, error is set to zero"
+
+
+    TWO_REQPOS              writable    2 range -200 200    "required position"
+
+    TWO_PGAIN               writable    2 range 0 100       "P-gain"
+    TWO_IGAIN               writable    2 range 0 10        "I-gain"
+    TWO_DGAIN               writable    2 range -10 10      "D-gain"
+    TWO_INTEGRALCAP         writable    2 range 0 1000      "integral error cap"
+    TWO_INTEGRALDECAY       writable    2 range 0 1         "integral decay"
+
+    TWO_OVERCURRENTTHRESH   writable    2 range 0 1000      "overcurrent threshold"
+
+    TWO_ACTUALPOS                       2 range -200 200    "actual position from pot"
+    TWO_ERROR                           2 range -200 200  "required minus actual position"
+    TWO_ERRORINTEGRAL                   2 range -1000 1000  "error integral magnitude"
+    TWO_ERRORDERIV			2 range -200 200    "error derivative"
+    TWO_CONTROL                         2 range -255 255      "value being sent to motor"
+    TWO_INTERVALCTRL                    2 range 0 1000      "time between control runs (ms)"
+    TWO_CURRENT		                2 unmapped          "raw current reading"
+    TWO_CALIBMIN	    writable	1 range -120 120    "minimum angle, mapped onto pot value 0"
+    TWO_CALIBMAX            writable    1 range -120 120    "maximum angle, mapped onto pot value 1024"    
+    TWO_STALLCHECK	    writable	1 range 0 255      "stall check control signal level"
+    TWO_DEADZONE          writable    1 range 0 50      "if below this value, error is set to zero"
+    
+}
+
+-- these are registers which actually exist only on the master;
+-- they're dealt with specially, not relayed over to the slave. As such,
+-- there is no common block.
+
+MASTER nocommon {
+    RESET		    writable    1 unmapped           "set to clear exception state"
+    TEMPAMBIENT                         2 range -20 100      "temperature sensor"
+    TEMP1                               2 range -20 100      "temperature sensor"
+    TEMP2                               2 range -20 100      "temperature sensor"
+    TEMP3                               2 range -20 100      "temperature sensor"
+    TEMP4                               2 range -20 100      "temperature sensor"
+    TEMP5                               2 range -20 100      "temperature sensor"
+    TEMP6                               2 range -20 100      "temperature sensor"
+    TEMP7                               2 range -20 100      "temperature sensor"
+    TEMP8                               2 range -20 100      "temperature sensor"
+    TEMP9                               2 range -20 100      "temperature sensor"
+    EXCEPTIONDATA			2 unmapped	     "LSB: type, MSB: motor|slave"
+}   

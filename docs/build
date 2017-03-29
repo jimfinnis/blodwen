@@ -1,0 +1,4 @@
+dots2pdfs
+svgs2pdfs
+pdflatex main.tex
+pdflatex main.tex

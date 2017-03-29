@@ -1,0 +1,2 @@
+#!/bin/sh
+avrdude -p atmega328p -c arduino -P /dev/ttyACM0 -U flash:w:.build/firmware.hex

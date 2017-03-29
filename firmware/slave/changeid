@@ -1,0 +1,2 @@
+#!/bin/sh
+avrdude -p atmega328p -c usbtiny -U eeprom:w:$1:m

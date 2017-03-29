@@ -1,0 +1,270 @@
+\section{Organisation of firmware source code}
+\boxy{You probably don't need to read this section unless you're maintaining
+the code for the master controller.}
+
+The source code is kept in the \texttt{firmware} directory:
+\begin{itemize}
+\item \textbf{common} holds useful definitions for both slave and master, such as register 
+structures and assignments.
+\item \textbf{master} holds code for the master (Arduino) side;
+\item \textbf{slave} holds code used by the slave (motor driver) side.
+\end{itemize}
+\subsection{Common register table}
+The \emph{common} directory contains files describing the registers used
+in the system:
+\begin{itemize}
+\item \textbf{regDefinitions} is a file with a special syntax from which
+\texttt{regsauto.h}, \texttt{regsauto.cpp} and \texttt{regsauto.ino} are
+built by the \texttt{build} script --- see below for details.
+\item \textbf{regs.h} defines the \emph{Register} structure, which
+encapsulates a one or two byte value which may or may not be mapped onto
+a arbitrary range of floating point values (see below).
+\item \textbf{regsauto.h}, \textbf{regsauto.cpp} and \textbf{regsauto.ino}
+are generated automatically by the \emph{build} script. They contain
+register definitions --- the include file contains the register names and
+numbers, while the identical \texttt{cpp} and \texttt{ino} files contain
+the \emph{Register} structures describing each register: number of bits,
+writability, float range (or values indicating ``unmapped'').
+These files are compiled into master, slave and PC code using symbolic links
+from their respective source directories.
+\end{itemize}
+\subsection{Register definition file}
+The registers are defined in the register definition file
+\texttt{regDefinitions} which can be found in the \texttt{firmware/common} 
+directory. It consists of a number of blocks, each of which
+specifies a different register table (the two types of slave
+controller have different register sets.) Named blocks are
+preceded by an unnamed block, which specifies a block
+of registers common to all tables.
+
+A Haskell script, \texttt{regparse.hs}, is used to generate
+the \texttt{.h} and \texttt{.cpp/ino} files automatically,
+which is itself invoked by running \texttt{build.} 
+
+\subsubsection{Register value mapping}
+There are two types of register: \textbf{unmapped}, which are straightforward
+8 or 16 bit values (depending on the size of the register); and \textbf{mapped},
+where a floating point range is mapped onto the underlying range.
+
+These mappings are defined in the register definition file. For example:
+
+\begin{v}
+    RESET          writable  1 unmapped      "reset bits"
+\end{v}
+defines a register called RESET, which is a writable 1-byte unmapped value;
+whereas
+\begin{v}
+    DRIVE_REQSPEED writable  2 range -4000 4000  "required speed"
+\end{v}
+defines a register in which the floating point range [-4000,4000] is mapped onto
+the fixed point range [0,65535].
+Mapping and unmapping are done using the \texttt{map()} and \texttt{unmap()} methods
+in Register; the PC and firmware deal with this automatically as required (see, for example,
+the \texttt{i2c\_interface.ino} code in the slave, which catches register changes as they happen,
+unmaps them, and uses them to set values in the control system.)
+
+If map or unmap are called on an unmapped register, the value is unchanged (apart from its type.)
+
+\clearpage
+\section{Master firmware and PC-Master protocol}
+\label{protoc}
+The master firmware takes commands from the USB serial port and communicates
+with the slaves over \isqc{}.
+\subsection{PC-Master protocol}
+This protocol is a binary serial protocol. Messages from
+the PC to the master have the following form:
+\begin{itemize}
+\item 1 byte: number of bytes in packet (including this one)
+\item 1 byte: command number and slave ID. The slave ID occupies
+the top 4 bits, the command number the bottom 4. If the slave
+ID is zero, the registers to be accessed are local registers
+on the master. The commands are:
+\begin{itemize}
+\item 2 : write command
+\item 3 : read command
+\item 4 : set read set command
+\end{itemize}
+\item Remaining bytes: payload, see below
+\end{itemize}
+The response depends on the command, as described in the following
+subsections which go into the details of  the each command.
+\subsubsection{Write command, code 2}
+Payload:
+\begin{itemize}
+\item 1 byte: number of writes. \textbf{For each write:}
+\begin{itemize}
+\item 1 byte: register number
+\item 1-2 bytes (depending on size of register,
+obtained from register table) : value of register, LSB first
+\end{itemize}
+\end{itemize}
+Response: 1 byte, value zero.
+\subsubsection{Read command, code 3}
+Payload is a single byte, the index of the read set to read. Response is, \textbf{for each register in
+the given read set:}
+\begin{itemize}
+\item 1-2 bytes (depending on size of register,
+obtained from register table) : value of register, LSB first
+\end{itemize}
+\subsubsection{Set read set command, code 4}
+The first byte in the payload is index of the read set to change. 
+Each subsequent byte in the payload is the index of a register
+which should be in the read set. The next read command for that read set
+will result in the value of these registers being sent,
+in the same order, to the PC. \textbf{Read sets are shared across all devices}
+so the slave number is irrelevant.
+
+Response is 1 byte: the number of registers in the new read
+set.
+
+\clearpage
+\subsection{Examples of PC-Master protocol commands}
+For the following examples, registers 0 and 1 are 1 byte
+registers, while 2 and 3 are 2 byte registers.
+
+\subsubsection{Example 1: write}
+PC to master: \verb+0d 32 04 00 ff 01 ff 02 01 00 03 02 00+ \\
+Response: \verb+00+ 
+\begin{itemize}
+\item \verb+0d 32+:  13 bytes, command 2 (write) for slave 3
+\item \verb+04+: contains 4 writes
+\item \verb+00 ff+ write \verb+ff+ to register 0
+\item \verb+01 ff+ write \verb+ff+ to register 1
+\item \verb+02 01 00 + write \verb+0001+ to register 2
+\item \verb+03 02 00 + write \verb+0002+ to register 3
+\end{itemize}
+Response is just zero to acknowledge.
+
+\subsubsection{Example 2: set read set}
+PC to master: \verb+06 04 01 00 01 02 03+ \\
+Response: \verb+04+ 
+\begin{itemize}
+\item \verb+06 04+: 6 bytes, command 4 (set read set) for slave 0 (this value is ignored.)
+\item \verb+01+: change read set 1
+\item \verb+00 01 02 03+: registers 0, 1, 2 and 3 should be the new read set 1.
+\end{itemize}
+The response is \verb+04+, the number of registers in the read set.
+
+\subsubsection{Example 3: read}
+PC to master: \verb+03 12 01+ \\
+Response: \verb+ff ff 01 00 02 00+ 
+\begin{itemize}
+\item \verb+03 12+: 3 bytes, command 2 (read) for slave 1
+\item \verb+01+: read set 1
+\end{itemize}
+The response is the values of the registers:
+\begin{itemize}
+\item \verb+ff+ : register 0 contains \verb+ff+ 
+\item \verb+ff+ : register 1 contains \verb+ff+ 
+\item \verb+01 00+ : register 2 contains \verb+0001+ 
+\item \verb+02 00+ : register 3 contains \verb+0002+ 
+\end{itemize}
+
+\subsection{Firmware registers}
+\label{firmrec}
+%
+%These are not to be confused with the top-level fa\c{c}ade registers, which act as a high-level
+%network capable API. These firmware registers are only used in communications between the PC
+%and the \isqc{} units, mediated by the master.
+
+%The reason for these two sets of registers is that at a low level, each wheel is controlled
+%by more than one slave controller: the drive/steer slave for that wheel, and the lift/lift slave
+%for the wheel pair. This level of complexity --- knowing which controller to address
+%to affect which motor on which wheel --- is handled at a higher level by the on-board PC.
+%In that system, both a set of C++ classes and a set of registers for network control
+%are used which translate into read/write commands for the firmware registers.
+
+In the following tables, the columns have the following meanings:
+\begin{itemize}
+\item \textbf{ID} : the ID number of the register
+\item \textbf{Symbol} : the C++ \verb+#define+ symbol given to that ID
+\item \textbf{n} : the number of bytes for this register
+\item \textbf{W} : whether the register is writable or not
+\item \textbf{Mapping} : if the register is mapped onto a floating point range, the interval is specified. ``Unmapped'' indicates an integer or bitfield register.
+\item \textbf{Description} : a brief description
+\end{itemize}
+
+
+
+\input{regs.tex}
+
+\clearpage
+\subsection{Main code (sketch.ino)}
+The main code defines and uses a \emph{BinarySerialReader} abstract class,
+extended as \emph{MySerialReader,} which processes packets
+from the PC in three methods:
+\begin{itemize}
+\item \textbf{dowrite} handles writing a set of registers for a given slave device
+on the \isqc{} bus;
+\item \textbf{doread} handles a request to read the registers in the current readset of a device;
+\item \textbf{doreadset} handles a request to change the current readset for a device.
+\end{itemize}
+
+\subsection{I2CDevice (i2c.h)}
+This class encapsulates a link to an \isqc{} slave device, abstracted
+as a register interface. Devices may each have their own set of register
+definitions, which can include registers of different byte widths and
+access controls (i.e. read/write or read only.) Currently, two device types
+are supported, as shown in section~\ref{whpairarc}: drive/steer and lift/lift.
+While very similar, the registers are slightly different.
+
+The bus address of the device is specified by passing the address into the
+constructor.
+The registers are also specified in the constructor, by passing a table of
+\emph{Register} structures. This table comes from the \emph{regs.ino} file in the common
+directory.
+
+\begin{itemize}
+\item \textbf{writeRegister} takes the register number
+and the new value as an integer --- size conversion is done automatically according
+to the size in the register table.
+\item \textbf{readRegister} reads data from a register, writing it
+to an integer (again, it's auto-resized.) A return value
+is provided giving status --- generally a failure means that
+a bad register or device number has been passed in.
+\end{itemize}
+Note that mapping/unmapping are done at a higher level than this --- these two
+methods deal with the integer values.
+Writing a register does the following:
+\begin{itemize}
+\item check register exists and is writable
+\item begin transmission (i.e. start writing on the bus and send the device number)
+\item write the register number and the value
+\item end transmission
+\end{itemize}
+Reading a register does the following:
+\begin{itemize}
+\item check register exists
+\item begin transmission (i.e. start writing on the bus and send the device number)
+\item write the register number
+\item end transmission
+\item request a read from the device
+\item wait for data to become available
+\item while data is available, read it and add it to the data (which arrives LSB first)
+\end{itemize}
+It follows, therefore that on both master and slave \emph{reading is more expensive than writing.} 
+
+Note that the constructor for this object will not initialise
+the Wire library.
+
+\subsection{Remote control}
+Code for the remote is in the following files:
+\begin{itemize}
+\item \texttt{rc.ino} and \texttt{rc.h} contain the \textbf{RCReceiver} class,
+which handles reading servo pulses from the receiver and decoding them.
+This is done by using a pin change interrupt handler on the three relevant pins:
+we count the number of rising edges since the last update call. There
+is also a \textbf{ready()} method which returns true if data was recently
+received.
+\item \texttt{rcRover.ino} and \texttt{rcRover.h} extend the above class
+with methods specific to this application. In particular, the \textbf{update()} method
+updates the underlying receiver and sends register writes to the relevant slaves
+if there is servo data present.
+\end{itemize}
+The main loop in \texttt{sketch.ino} (in \textbf{BinarySerialReader::poll()} checks the remote for data, and does
+not perform the usual processing --- reading register writes from the PC and
+sending them on to the relevant slave --- if there is data. Instead, the 
+remote code will start to send register writes.
+
+Note that initiating remote control (by turning on the remote) will
+reset any calibration data to defaults and also reset any exception states!

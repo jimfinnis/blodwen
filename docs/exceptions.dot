@@ -1,0 +1,44 @@
+digraph states {
+
+subgraph clusterMaster {
+    label="master"
+    startM [shape=circle,label="START",style=filled,color=lightgray,fontsize=10]
+    normalM [label="normal"]
+    exceptionM [label="exception"]
+    startM -> exceptionM [label="boot"]
+    normalM -> p2 [arrowhead=none]
+    p2 -> exceptionM [label="slave\nproblem"]
+    p2 [shape=point]
+    exceptionM -> normalM [label="reset"]
+}    
+subgraph clusterSlave {
+    label="slave"
+    startS [shape=circle,label="START",style=filled,color=lightgray,fontsize=10]
+    normalS [label="normal"]
+    exceptionS [label="exception"]
+    
+    startS -> exceptionS [label="boot"]
+    normalS -> haltS [label="comms"]
+    haltS [shape=circle, label="HALT", color=lightgray, style=filled,fontsize=10]
+    haltS -> startM [style="dotted"]
+    
+    normalS -> p1 [arrowhead=none]
+    p1 [shape=point]
+    p1 -> exceptionS [label="local problem"]
+    
+    exceptionS -> normalS [label="reset"]
+    
+    normalS -> p3 [arrowhead=none]
+    p3 [shape=point]
+    p3 -> exceptionS [label="remote slave\nproblem"]
+    
+    
+}
+
+
+
+startM -> startS [style=dotted]
+p1->p2 [style=dotted,label="slave problem\nnotify"]
+p2->p3 [style=dotted,label="slave problem\nbroadcast"]
+
+}

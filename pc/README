@@ -1,0 +1,15 @@
+This is the PC code for the rover library.
+
+To build the library, use:
+
+mkdir build
+cd build
+cmake ..
+make
+
+
+The library will be built and packaged into an archive
+called blodwen.tgz (in this directory, not the build directory).
+
+This archive will contain the libblodwen.a static library and all
+the required include files.

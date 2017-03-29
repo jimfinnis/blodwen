@@ -1,0 +1,128 @@
+\subsubsection{Common block}
+These registers are common to all devices \emph{except} the master device, which is the local master
+controller and has the special ID 0.
+
+\begin{tabular}{|p{0.2in}|p{2.7in}|p{0.1in}|p{0.1in}|p{1in}|p{1.5in}|}\hline
+\textbf{ID} & \textbf{Symbol} & \textbf{n} & \textbf{W} & \textbf{Mapping} & \textbf{Description}  \\ \hline 
+0 & REG\_RESET & 1 & Y & unmapped & reset bits - beware race conditions\\ \hline
+1 & REG\_TIMER & 2 &  & unmapped & millis since start\\ \hline
+2 & REG\_INTERVALI2C & 2 &  & unmapped & interval between I2C ticks\\ \hline
+3 & REG\_STATUS & 2 &  & unmapped & see status flags in regs.h\\ \hline
+4 & REG\_DEBUGLED & 1 & Y & unmapped & debugging LEDs, turns on for some time\\ \hline
+5 & REG\_EXCEPTIONDATA & 2 & Y & unmapped & LSB: type, MSB: id. Write causes REMOTE exception\\ \hline
+6 & REG\_DISABLEDEXCEPTIONS & 2 & Y & unmapped & bitfield of disabled exceptions\\ \hline
+7 & REG\_PING & 1 & Y & unmapped & debugging\\ \hline
+8 & REG\_DEBUG & 2 & Y & unmapped & debugging\\ \hline
+\end{tabular}
+
+\clearpage
+\subsubsection{Drive/steer registers}
+These registers appear on drive/steer controllers, and control a drive and steer motor.
+There may also be a chassis potentiometer, although it is only present on one of the two D/S slaves
+in each wheel pair.
+
+\begin{tabular}{|p{0.2in}|p{2.7in}|p{0.1in}|p{0.1in}|p{1in}|p{1.5in}|}\hline
+\textbf{ID} & \textbf{Symbol} & \textbf{n} & \textbf{W} & \textbf{Mapping} & \textbf{Description}  \\ \hline 
+9 & REGDS\_DRIVE\_REQSPEED & 2 & Y & [-4000.0,4000.0] & required speed\\ \hline
+10 & REGDS\_DRIVE\_PGAIN & 2 & Y & [0.0,10.0] & P-gain\\ \hline
+11 & REGDS\_DRIVE\_IGAIN & 2 & Y & [0.0,10.0] & I-gain\\ \hline
+12 & REGDS\_DRIVE\_DGAIN & 2 & Y & [-10.0,10.0] & D-gain\\ \hline
+13 & REGDS\_DRIVE\_INTEGRALCAP & 2 & Y & [0.0,1000.0] & integral error cap\\ \hline
+14 & REGDS\_DRIVE\_INTEGRALDECAY & 2 & Y & [0.0,1.0] & integral decay\\ \hline
+15 & REGDS\_DRIVE\_OVERCURRENTTHRESH & 2 & Y & [0.0,1000.0] & overcurrent threshold\\ \hline
+16 & REGDS\_DRIVE\_ACTUALSPEED & 2 &  & [-4000.0,4000.0] & actual speed from encoder\\ \hline
+17 & REGDS\_DRIVE\_ERROR & 2 &  & [-1000.0,1000.0] & required minus actual speed\\ \hline
+18 & REGDS\_DRIVE\_ERRORINTEGRAL & 2 &  & [-1000.0,1000.0] & error integral magnitude\\ \hline
+19 & REGDS\_DRIVE\_ERRORDERIV & 2 &  & [-200.0,200.0] & error derivative\\ \hline
+20 & REGDS\_DRIVE\_CONTROL & 2 &  & [-255.0,255.0] & value being sent to motor\\ \hline
+21 & REGDS\_DRIVE\_INTERVALCTRL & 2 &  & [0.0,1000.0] & time between control runs (ms)\\ \hline
+22 & REGDS\_DRIVE\_CURRENT & 2 &  & unmapped & raw current reading\\ \hline
+23 & REGDS\_DRIVE\_ODO & 2 &  & unmapped & encoder ticks\\ \hline
+24 & REGDS\_DRIVE\_STALLCHECK & 1 & Y & [0.0,255.0] & stall check control signal level\\ \hline
+25 & REGDS\_DRIVE\_DEADZONE & 1 & Y & [0.0,50.0] & if below this value, error is set to zero\\ \hline
+26 & REGDS\_STEER\_REQPOS & 2 & Y & [-200.0,200.0] & required position\\ \hline
+27 & REGDS\_STEER\_PGAIN & 2 & Y & [0.0,100.0] & P-gain\\ \hline
+28 & REGDS\_STEER\_IGAIN & 2 & Y & [0.0,10.0] & I-gain\\ \hline
+29 & REGDS\_STEER\_DGAIN & 2 & Y & [-10.0,10.0] & D-gain\\ \hline
+30 & REGDS\_STEER\_INTEGRALCAP & 2 & Y & [0.0,1000.0] & integral error cap\\ \hline
+31 & REGDS\_STEER\_INTEGRALDECAY & 2 & Y & [0.0,1.0] & integral decay\\ \hline
+32 & REGDS\_STEER\_OVERCURRENTTHRESH & 2 & Y & [0.0,1000.0] & overcurrent threshold\\ \hline
+33 & REGDS\_STEER\_ACTUALPOS & 2 &  & [-200.0,200.0] & actual position from pot\\ \hline
+34 & REGDS\_STEER\_ERROR & 2 &  & [-200.0,200.0] & required minus actual position\\ \hline
+35 & REGDS\_STEER\_ERRORINTEGRAL & 2 &  & [-1000.0,1000.0] & error integral magnitude\\ \hline
+36 & REGDS\_STEER\_ERRORDERIV & 2 &  & [-200.0,200.0] & error derivative\\ \hline
+37 & REGDS\_STEER\_CONTROL & 2 &  & [-255.0,255.0] & value being sent to motor\\ \hline
+38 & REGDS\_STEER\_INTERVALCTRL & 2 &  & [0.0,1000.0] & time between control runs (ms)\\ \hline
+39 & REGDS\_STEER\_CURRENT & 2 &  & unmapped & raw current reading\\ \hline
+40 & REGDS\_STEER\_STALLCHECK & 1 & Y & [0.0,255.0] & stall check control signal level\\ \hline
+41 & REGDS\_STEER\_DEADZONE & 1 & Y & [0.0,50.0] & if below this value, error is set to zero\\ \hline
+42 & REGDS\_STEER\_CALIBMIN & 1 & Y & [-120.0,120.0] & minimum angle, mapped onto pot value 0\\ \hline
+43 & REGDS\_STEER\_CALIBMAX & 1 & Y & [-120.0,120.0] & maximum angle, mapped onto pot value 1024\\ \hline
+44 & REGDS\_CHASSIS & 2 &  & [0.0,1024.0] & chassis pot reading\\ \hline
+\end{tabular}
+
+\clearpage
+\subsubsection{Lift/lift registers}
+These registers appear on lift/lift controllers, and control two lift motors.
+
+\begin{tabular}{|p{0.2in}|p{2.7in}|p{0.1in}|p{0.1in}|p{1in}|p{1.5in}|}\hline
+\textbf{ID} & \textbf{Symbol} & \textbf{n} & \textbf{W} & \textbf{Mapping} & \textbf{Description}  \\ \hline 
+9 & REGLL\_ONE\_REQPOS & 2 & Y & [-200.0,200.0] & required position\\ \hline
+10 & REGLL\_ONE\_PGAIN & 2 & Y & [0.0,100.0] & P-gain\\ \hline
+11 & REGLL\_ONE\_IGAIN & 2 & Y & [0.0,10.0] & I-gain\\ \hline
+12 & REGLL\_ONE\_DGAIN & 2 & Y & [-10.0,10.0] & D-gain\\ \hline
+13 & REGLL\_ONE\_INTEGRALCAP & 2 & Y & [0.0,1000.0] & integral error cap\\ \hline
+14 & REGLL\_ONE\_INTEGRALDECAY & 2 & Y & [0.0,1.0] & integral decay\\ \hline
+15 & REGLL\_ONE\_OVERCURRENTTHRESH & 2 & Y & [0.0,1000.0] & overcurrent threshold\\ \hline
+16 & REGLL\_ONE\_ACTUALPOS & 2 &  & [-200.0,200.0] & actual position from pot\\ \hline
+17 & REGLL\_ONE\_ERROR & 2 &  & [-200.0,200.0] & required minus actual position\\ \hline
+18 & REGLL\_ONE\_ERRORINTEGRAL & 2 &  & [-1000.0,1000.0] & error integral magnitude\\ \hline
+19 & REGLL\_ONE\_ERRORDERIV & 2 &  & [-200.0,200.0] & error derivative\\ \hline
+20 & REGLL\_ONE\_CONTROL & 2 &  & [-255.0,255.0] & value being sent to motor\\ \hline
+21 & REGLL\_ONE\_INTERVALCTRL & 2 &  & [0.0,1000.0] & time between control runs (ms)\\ \hline
+22 & REGLL\_ONE\_CURRENT & 2 &  & unmapped & raw current reading\\ \hline
+23 & REGLL\_ONE\_CALIBMIN & 1 & Y & [-120.0,120.0] & minimum angle, mapped onto pot value 0\\ \hline
+24 & REGLL\_ONE\_CALIBMAX & 1 & Y & [-120.0,120.0] & maximum angle, mapped onto pot value 1024\\ \hline
+25 & REGLL\_ONE\_STALLCHECK & 1 & Y & [0.0,255.0] & stall check control signal level\\ \hline
+26 & REGLL\_ONE\_DEADZONE & 1 & Y & [0.0,50.0] & if below this value, error is set to zero\\ \hline
+27 & REGLL\_TWO\_REQPOS & 2 & Y & [-200.0,200.0] & required position\\ \hline
+28 & REGLL\_TWO\_PGAIN & 2 & Y & [0.0,100.0] & P-gain\\ \hline
+29 & REGLL\_TWO\_IGAIN & 2 & Y & [0.0,10.0] & I-gain\\ \hline
+30 & REGLL\_TWO\_DGAIN & 2 & Y & [-10.0,10.0] & D-gain\\ \hline
+31 & REGLL\_TWO\_INTEGRALCAP & 2 & Y & [0.0,1000.0] & integral error cap\\ \hline
+32 & REGLL\_TWO\_INTEGRALDECAY & 2 & Y & [0.0,1.0] & integral decay\\ \hline
+33 & REGLL\_TWO\_OVERCURRENTTHRESH & 2 & Y & [0.0,1000.0] & overcurrent threshold\\ \hline
+34 & REGLL\_TWO\_ACTUALPOS & 2 &  & [-200.0,200.0] & actual position from pot\\ \hline
+35 & REGLL\_TWO\_ERROR & 2 &  & [-200.0,200.0] & required minus actual position\\ \hline
+36 & REGLL\_TWO\_ERRORINTEGRAL & 2 &  & [-1000.0,1000.0] & error integral magnitude\\ \hline
+37 & REGLL\_TWO\_ERRORDERIV & 2 &  & [-200.0,200.0] & error derivative\\ \hline
+38 & REGLL\_TWO\_CONTROL & 2 &  & [-255.0,255.0] & value being sent to motor\\ \hline
+39 & REGLL\_TWO\_INTERVALCTRL & 2 &  & [0.0,1000.0] & time between control runs (ms)\\ \hline
+40 & REGLL\_TWO\_CURRENT & 2 &  & unmapped & raw current reading\\ \hline
+41 & REGLL\_TWO\_CALIBMIN & 1 & Y & [-120.0,120.0] & minimum angle, mapped onto pot value 0\\ \hline
+42 & REGLL\_TWO\_CALIBMAX & 1 & Y & [-120.0,120.0] & maximum angle, mapped onto pot value 1024\\ \hline
+43 & REGLL\_TWO\_STALLCHECK & 1 & Y & [0.0,255.0] & stall check control signal level\\ \hline
+44 & REGLL\_TWO\_DEADZONE & 1 & Y & [0.0,50.0] & if below this value, error is set to zero\\ \hline
+\end{tabular}
+
+\clearpage
+\subsubsection{Master registers}
+These registers are local to the master controller --- they are currently used for 
+temperature and exception monitoring.
+
+\begin{tabular}{|p{0.2in}|p{2.7in}|p{0.1in}|p{0.1in}|p{1in}|p{1.5in}|}\hline
+\textbf{ID} & \textbf{Symbol} & \textbf{n} & \textbf{W} & \textbf{Mapping} & \textbf{Description}  \\ \hline 
+0 & REGMASTER\_RESET & 1 & Y & unmapped & set to clear exception state\\ \hline
+1 & REGMASTER\_TEMPAMBIENT & 2 &  & [-20.0,100.0] & temperature sensor\\ \hline
+2 & REGMASTER\_TEMP1 & 2 &  & [-20.0,100.0] & temperature sensor\\ \hline
+3 & REGMASTER\_TEMP2 & 2 &  & [-20.0,100.0] & temperature sensor\\ \hline
+4 & REGMASTER\_TEMP3 & 2 &  & [-20.0,100.0] & temperature sensor\\ \hline
+5 & REGMASTER\_TEMP4 & 2 &  & [-20.0,100.0] & temperature sensor\\ \hline
+6 & REGMASTER\_TEMP5 & 2 &  & [-20.0,100.0] & temperature sensor\\ \hline
+7 & REGMASTER\_TEMP6 & 2 &  & [-20.0,100.0] & temperature sensor\\ \hline
+8 & REGMASTER\_TEMP7 & 2 &  & [-20.0,100.0] & temperature sensor\\ \hline
+9 & REGMASTER\_TEMP8 & 2 &  & [-20.0,100.0] & temperature sensor\\ \hline
+10 & REGMASTER\_TEMP9 & 2 &  & [-20.0,100.0] & temperature sensor\\ \hline
+11 & REGMASTER\_EXCEPTIONDATA & 2 &  & unmapped & LSB: type, MSB: motor|slave\\ \hline
+\end{tabular}
+
