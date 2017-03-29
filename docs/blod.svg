@@ -13,7 +13,7 @@
    height="445.40381"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="blod.svg">
   <defs
      id="defs4">
@@ -54,16 +54,16 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
-     inkscape:cx="641.65923"
+     inkscape:cx="430.23066"
      inkscape:cy="302.9725"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:snap-object-midpoints="true"
      inkscape:snap-center="true"
-     inkscape:window-width="1366"
-     inkscape:window-height="744"
-     inkscape:window-x="0"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
+     inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
      fit-margin-top="0"
@@ -149,7 +149,7 @@
        sodipodi:cy="392.36218"
        sodipodi:rx="60"
        sodipodi:ry="60"
-       d="m 200,392.36218 c 0,33.13709 -26.86292,60 -60,60 -33.13708,0 -60,-26.86291 -60,-60 0,-33.13708 26.86292,-60 60,-60 33.13708,0 60,26.86292 60,60 z"
+       d="m 200,392.36218 a 60,60 0 0 1 -60,60 60,60 0 0 1 -60,-60 60,60 0 0 1 60,-60 60,60 0 0 1 60,60 z"
        transform="matrix(-1,0,0,1,640,120)" />
     <rect
        y="408.07648"
@@ -160,7 +160,7 @@
        style="color:#000000;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
        transform="scale(-1,1)" />
     <path
-       d="m 200,392.36218 c 0,33.13709 -26.86292,60 -60,60 -33.13708,0 -60,-26.86291 -60,-60 0,-33.13708 26.86292,-60 60,-60 33.13708,0 60,26.86292 60,60 z"
+       d="m 200,392.36218 a 60,60 0 0 1 -60,60 60,60 0 0 1 -60,-60 60,60 0 0 1 60,-60 60,60 0 0 1 60,60 z"
        sodipodi:ry="60"
        sodipodi:rx="60"
        sodipodi:cy="392.36218"
@@ -186,7 +186,7 @@
        sodipodi:cy="392.36218"
        sodipodi:rx="60"
        sodipodi:ry="60"
-       d="m 200,392.36218 c 0,33.13709 -26.86292,60 -60,60 -33.13708,0 -60,-26.86291 -60,-60 0,-33.13708 26.86292,-60 60,-60 33.13708,0 60,26.86292 60,60 z" />
+       d="m 200,392.36218 a 60,60 0 0 1 -60,60 60,60 0 0 1 -60,-60 60,60 0 0 1 60,-60 60,60 0 0 1 60,60 z" />
     <path
        style="color:#000000;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
        d="m 260,302.36218 320,0"
@@ -208,7 +208,7 @@
        y="297.36218" />
     <text
        xml:space="preserve"
-       style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       style="font-style:normal;font-weight:normal;font-size:18px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        x="628.58984"
        y="366.078"
        id="text3846"
@@ -220,10 +220,14 @@
          sodipodi:role="line"
          x="628.58984"
          y="388.578"
-         id="tspan3850">door (with safety switch)</tspan></text>
+         id="tspan3850">door (when a normal LiPo</tspan><tspan
+         sodipodi:role="line"
+         x="628.58984"
+         y="411.078"
+         id="tspan4195">is used)</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       style="font-style:normal;font-weight:normal;font-size:18px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        x="634.52246"
        y="266.078"
        id="text3852"
@@ -235,10 +239,10 @@
          sodipodi:role="line"
          x="634.52246"
          y="288.578"
-         id="tspan3856">(with safety switch)</tspan></text>
+         id="tspan3856" /></text>
     <text
        xml:space="preserve"
-       style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       style="font-style:normal;font-weight:normal;font-size:18px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        x="437.58301"
        y="227.328"
        id="text3858"
@@ -246,7 +250,7 @@
          sodipodi:role="line"
          id="tspan3860"
          x="437.58301"
-         y="227.328">power button on top</tspan></text>
+         y="227.328">power buttons on top</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"

@@ -3,17 +3,15 @@ Much of this data is repeated in more detail later in the document,
 which should be read before use (at least up to and including section~\ref{angcont}).
 \subsection{Rover startup checklist}
 \begin{enumerate}
-\item Ensure main compartment lid is closed (both the main compartment
-and the battery compartment have switches which cut off the power to
-the drive system if either is open).
-\item Insert and connect battery. Leave battery door open.
-\item Switch on PCs using the button on the lid.
-\item Switch off science PC (the right-hand PC). The button is on
+\item Ensure the battery inside the main compartment is charged.
+\item Ensure main compartment lid is closed.
+\item Switch on PCs using the PC power button.
+\item If it's installed, you may wish to switch off the science PC (the right-hand PC). The button is on
 the front of the PC, near the floor of the compartment.
 \item Check current is less than 2A.
 \item Connect a laptop to the rover's WiFi network (the SSID contains ``EnGenius'').
 \item SSH into the rover: host 192.168.0.10, username \emph{blodwen}, password \emph{robotics}.
-\item Close the battery door.
+\item Switch on the motors with the other power switch on the lid.
 \item Check that the underside lights go steady on, then flash at about 1Hz.
 \item Check current is about 1.8 to 2A.
 \item (The list from here implies direct rover control via Angort)
@@ -37,12 +35,11 @@ fails) to send an emergency stop. All gains will be zeroed, and
 \subsection{Rover shutdown checklist}
 \begin{enumerate}
 \item Exit the Angort interpreter with CTRL-D or \texttt{quit}.
-\item Open the battery door to power down the control and drive
-electronics.
+\item Switch off the motors.
 \item Power down the locomotion PC with \texttt{sudo poweroff}.
 \item Wait for the power consumption to drop to about 1A (indicating
 PC powerdown).
-\item Switch off the power using the top switch.
+\item Switch off the PC power using the other power switch.
 \end{enumerate}
 
 
@@ -129,16 +126,17 @@ Note that the rover's ``front'' is the obvious, wedged end.
 
 
 \begin{itemize}
-\item The battery compartment has space for two LiPo batteries, but only one needs
-to be connected --- the two connectors are wired in parallel. Make sure you connect
-the battery or batteries with the correct polarity.
-\item Switch on the rover PCs by pressing the power button on the roof of the chassis.
+\item The main compartment contains a LiPo battery suitable for most applications. Ensure this is charged
+prior to use.
+\item The battery compartment has space for an extra LiPo battery. If you are using this, the connector
+needs to be passed through from the main compartment. Ensure you connect with the correct polarity.
+\item Switch on the rover PCs by pressing the PC power button on the roof of the chassis.
 \textbf{Once this has been done, do not power off the rover without shutting the locomotion PC down from
 a terminal connection.}
 \item Check that the voltage and current are nominal (11.5-12V, $<3$A) using the indicator. If they are
 not, shut down the rover and power off.
-\item The two PCs are in the wedge-shaped compartment at the front of the rover.
-To save power, switch off the spare PC. This is the PC located on the right side of the rover.
+\item The PCs are in the wedge-shaped compartment at the front of the rover.
+If another PC is in use, switch off the spare PC. This is the PC located on the right side of the rover.
 The power studs are located at the bottom of the PC
 front panels. Figure~\ref{fig:blod2} shows the arrangement of the PCs more clearly. Power consumption should drop
 to $\sim 1.5$A.
@@ -148,8 +146,7 @@ to $\sim 1.5$A.
 \caption{The Blodwen rover, from above}
 \label{fig:blod2}
 \end{figure}
-\item For the rover's drive and control electronics to be powered, both the top lid
-and the battery door must be closed, closing microswitches mounted inside lid and door.
+\item To power up the motor, drive and chassis electronics the motor power switch on the lid should be pressed.
 \item The lights under the chassis should come on briefly, and then begin to flash approximately
 once a second. Power consumption should rise to $\sim 1.8-2$ A. The hardware is now ready to receive commands. Proceed to
 section~\ref{angort} to find out how to command it with the Angort language.

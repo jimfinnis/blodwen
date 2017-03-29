@@ -1,6 +1,7 @@
 # Firmware directory
 
-This directory contains the firmware for Blodwen.
+This directory contains the firmware for Blodwen. More details, such as the
+build process, can be found in the LaTeX documentation.
 
 ## common
 This contains the common files used by both. The other directories contain links
