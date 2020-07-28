@@ -1,0 +1,5 @@
+pc/blodwen
+pc/blodwen.tgz
+pc/**/build
+pc/**/cmake-build-debug
+.idea

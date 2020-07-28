@@ -14,14 +14,14 @@
 /// a subclass such as SlaveException is thrown.
 class RoverException : public std::exception {
 protected:
-    char msg[256];
+    char msg[256] = {0};
         
 public:
     RoverException(){}
     RoverException(const char *m){
         strcpy(msg,m);
     }
-    virtual const char *what(){
+    virtual const char *what() const noexcept {
         return msg;
     }
 };
