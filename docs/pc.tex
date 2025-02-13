@@ -8,7 +8,7 @@
 %  Author        : $Author$
 %  Created By    : Jim Finnis
 %  Created       : Mon Dec 10 22:01:02 2012
-%  Last Modified : <130605.1035>
+%  Last Modified : <250213.1532>
 %
 %  Description 
 %
@@ -67,6 +67,23 @@ handles writing values.)
 Communications are handled by \emph{SlaveProtocol}, which in turn uses
 \emph{SerialComms.} 
 
+\subsubsection{Creating and initialising the Rover object}
+You should obtain a pointer to the Rover singleton
+by calling \texttt{getInstance} on the class:
+\begin{v}
+    Rover *r = Rover::getInstance();
+\end{v}
+This ensures there can only ever be one Rover object. You can then 
+initialise the connection and send the default calibration data:
+\begin{v}
+    // provide init() with the serial port to be used (an optional
+    // second argument gives data about which wheels actually exist).
+    
+    r->init("/dev/ttyACM0");
+    r->calibrate();
+\end{v}
+
+
 \subsection{Motor}
 This class contains methods to send parameters (such as PID gains) to a motor,
 set its required position or speed, and reset any exception condition\footnote{for example, if
@@ -108,15 +125,16 @@ to the controllers by calling
 \subsection{Example code}
 \begin{v}
 int main(int argc,char *argv[]){
-    Rover r;
+    Rover *r = Rover::getInstance();
     
     try {
         // set up the rover given the comms port and the
-        // baud rate.
-        r.init("/dev/ttyACM0",115200);
+        // baud rate and the wheel pair mask (default is 7,
+        // all wheel pairs present)
+        r->init("/dev/ttyACM0");
         
         // send default calibration
-        r.calibrate();
+        r->calibrate();
         
         // some parameter data we're going to change;
         // you probably won't do this - it's just an illustration.
@@ -131,7 +149,7 @@ int main(int argc,char *argv[]){
         // and set a speed for them
         
         for(int i=1;i<=6;i++) { // motors are 1 to 6 as in the documentation
-            Motor *m = r.getDrive(i); // get each drive motor
+            Motor *m = r->getDrive(i); // get each drive motor
 
             // get a pointer to its parameters
             MotorParams *p = m->getParams();
@@ -148,10 +166,10 @@ int main(int argc,char *argv[]){
         
         for(;;){
             usleep(10000); // wait 1/100 s
-            r.update(); // update the rover
+            r->update(); // update the rover
 
             // get drive motor 1 data
-            DriveMotorData *d = r.getDriveData(1);
+            DriveMotorData *d = r->getDriveData(1);
             printf("%f\n",d->actual); // print actual speed
         }   
         
