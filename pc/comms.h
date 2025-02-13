@@ -201,14 +201,14 @@ public:
         }
         
         if(cfsetispeed(&options, br) < 0 || cfsetospeed(&options, br) < 0) {
-            notifyMessage("cannot set baud rate: ",sys_errlist[errno]);
+            notifyMessage("cannot set baud rate: ",strerror(errno));
             goto error;
         }
         //
         // Finally, apply the configuration
         //
         if(tcsetattr(fd, TCSAFLUSH, &options) < 0){
-            notifyMessage("cannot set attrs: ",sys_errlist[errno]);
+            notifyMessage("cannot set attrs: ",strerror(errno));
             goto error;
         }
         
@@ -404,6 +404,7 @@ error:
             if(log)fprintf(log,"read line *%s*\n",buf);
             return n;
         }
+        return -1;
     }
     
 };

@@ -362,7 +362,7 @@ public:
     
     /// are we connected?
     bool isConnected(){
-        return this && p && p->comms && p->comms->isReady();
+        return p && p->comms && p->comms->isReady();
     }
     
 };
