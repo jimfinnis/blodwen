@@ -12,7 +12,7 @@ extern void setsigs(bool allowInterrupt);
 
 extern Rover *r;
 
-void setpgain(Angort *a,int t){
+void setpgain(Runtime *a,int t){
     int w = a->popval()->toInt();
     float v = a->popval()->toFloat();
     if(r->isValid()){
@@ -23,7 +23,7 @@ void setpgain(Angort *a,int t){
     }else throw RoverInvalidException();
 }
 
-void setigain(Angort *a,int t){
+void setigain(Runtime *a,int t){
     int w = a->popval()->toInt();
     float v = a->popval()->toFloat();
     if(r->isValid()){
@@ -34,7 +34,7 @@ void setigain(Angort *a,int t){
     }else throw RoverInvalidException();
 }
 
-void setdgain(Angort *a,int t){
+void setdgain(Runtime *a,int t){
     int w = a->popval()->toInt();
     float v = a->popval()->toFloat();
     if(r->isValid()){
@@ -44,7 +44,7 @@ void setdgain(Angort *a,int t){
         m->sendParams();
     }else throw RoverInvalidException();
 }
-void seticap(Angort *a,int t){
+void seticap(Runtime *a,int t){
     int w = a->popval()->toInt();
     float v = a->popval()->toFloat();
     if(r->isValid()){
@@ -54,7 +54,7 @@ void seticap(Angort *a,int t){
         m->sendParams();
     }else throw RoverInvalidException();
 }
-void setidecay(Angort *a,int t){
+void setidecay(Runtime *a,int t){
     int w = a->popval()->toInt();
     float v = a->popval()->toFloat();
     if(r->isValid()){
@@ -64,7 +64,7 @@ void setidecay(Angort *a,int t){
         m->sendParams();
     }else throw RoverInvalidException();
 }
-void setocthresh(Angort *a,int t){
+void setocthresh(Runtime *a,int t){
     int w = a->popval()->toInt();
     float v = a->popval()->toFloat();
     if(r->isValid()){
@@ -74,7 +74,7 @@ void setocthresh(Angort *a,int t){
         m->sendParams();
     }else throw RoverInvalidException();
 }
-void showparams(Angort *a,int t){
+void showparams(Runtime *a,int t){
     int w = a->popval()->toInt();
     if(r->isValid()){
         Motor *d = r->getMotor(w,t);
@@ -88,7 +88,7 @@ void showparams(Angort *a,int t){
         }
     }else throw RoverInvalidException();
 }
-void setallparams(Angort *a,int t){
+void setallparams(Runtime *a,int t){
     int w = a->popval()->toInt();
     if(r->isValid()){
         setsigs(false);

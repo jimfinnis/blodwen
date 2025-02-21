@@ -137,7 +137,7 @@ bool autoUDP = false;
 /// interpreter completes).
 
 void emergencyStop(){
-    ang.stop();
+    ang.run->stop();
     if(!r->isValid())return;
     autoUDP=false;
     printf("EMERGENCY STOP\n");
@@ -243,10 +243,10 @@ struct MotorReqProperty : public Property {
         r->getMotor(wheel,type)->setRequired(v.toFloat());
     }
     virtual void preSet(){
-        wheel = a->popval()->toInt();
+        wheel = a->run->popval()->toInt();
     }
     virtual void preGet(){
-        wheel = a->popval()->toInt();
+        wheel = a->run->popval()->toInt();
         Types::tFloat->set(&v,
                            r->getMotor(wheel,type)->getRequired());
     }
@@ -378,12 +378,7 @@ void initThreads(){
 }
 
 void showAngortError(){
-    const Instruction *ip = ang.getIPException();
-    if(ip){
-        char buf[1024];
-        ip->getDetails(buf,1024);
-        printf("At: %s\n",buf);
-    }
+    ang.run->printAndDeleteStoredTrace();
 }
 
 int main(int argc,char *argv[]){
@@ -482,7 +477,7 @@ int main(int argc,char *argv[]){
         char buf[256];
         sprintf(buf,"%d|%d %c ",
                 GarbageCollected::getGlobalCount(),
-                ang.stack.ct,
+                ang.run->stack.ct,
                 ang.isDefining()?':':'>');
         setsigs(true);
 #if READLINE

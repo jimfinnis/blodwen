@@ -81,7 +81,7 @@ void sendUDPProperties(){
 %word addudpvar (name --) create a new global which mirrors the monitor
 {
     const StringBuffer& b = a->popString();
-    a->registerProperty(b.get(),new UDPProperty(b.get()));
+    a->ang->registerProperty(b.get(),new UDPProperty(b.get()));
 }
 
 %word udpwrite (string --) write a string to the UDP port for the monitor

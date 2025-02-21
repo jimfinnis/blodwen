@@ -104,7 +104,7 @@ extern void emergencyStop();
     r->update();
 }
 
-void getactual(Angort *a,int wheel,int type){
+void getactual(Runtime *a,int wheel,int type){
     MotorData *p = r->getMotorData(wheel,type);
     Types::tFloat->set(a->pushval(),p->actual);
 }
